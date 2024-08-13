@@ -1,0 +1,11 @@
+{
+    "terminal.integrated.copyOnSelection": true,
+    "terminal.integrated.automationProfile.linux": {},
+    "terminal.integrated.defaultProfile.linux": "zsh",
+    "terminal.integrated.profiles.linux": {
+    "zsh": {
+        "path": "/bin/zsh",
+    }
+},
+
+}
