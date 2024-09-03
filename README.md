@@ -1,4 +1,4 @@
-# Shell_IDE_Setup
+# Customising your shell and IDE environment
 Custom Shell and IDE setups for your workspace
 
 Vanila WSL2 Ubuntu install
