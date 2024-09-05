@@ -82,11 +82,13 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+    zsh-completions
     git
     docker
     ansible
     terraform
-    zsh-completions
     kubectl
     python
 )
@@ -123,6 +125,14 @@ source $ZSH/oh-my-zsh.sh
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 alias ll='ls -lsha'
 alias gs='git status'
+alias gco='git checkout'
+alias gbr='git branch'
+alias gl='git pull'
+alias gp='git push'
+alias dps='docker ps'
+alias dstop='docker stop $(docker ps -q)'
+alias drm='docker rm $(docker ps -aq)'
+alias dclean='docker system prune -f'
 
 # Optimize Zsh history
 HISTFILE=~/.zsh_history
