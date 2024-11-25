@@ -5,44 +5,43 @@ This repository automates the setup of a custom shell and IDE environment for Li
 ## Features
 
 ### VS Code Setup:
-    - Installs VS Code.
-    - Configures VS Code with custom profiles and settings.
-    - Installs extensions from a pre-defined list.
+- Installs VS Code.
+- Configures VS Code with custom profiles and settings.
+- Installs extensions from a pre-defined list.
 
 ### Shell Customization:
-    - Installs Zsh and Oh-My-Zsh.
-    - Configures Powerlevel10K theme with custom .zshrc and .p10k.zsh files.
-    - Supports skipping or updating existing configurations.
+- Installs Zsh and Oh-My-Zsh.
+- Configures Powerlevel10K theme with custom .zshrc and .p10k.zsh files.
+- Supports skipping or updating existing configurations.
 
 ### Nerd Fonts:
-    - Installs FiraCode Nerd Font for Powerline support.
+- Installs FiraCode Nerd Font for Powerline support.
 
 ### Development Tools:
-    - Installs Docker, Kubernetes, and Terraform.
-    - Ensures proper handling for WSL2 environments.
+- Installs Docker, Kubernetes, and Terraform.
+- Ensures proper handling for WSL2 environments.
 
 ### Cloud CLI Tools:
-    - Installs the CLI tools for AWS and Azure.
+- Installs the CLI tools for AWS and Azure.
 
 ### Python Environment:
-    - Ensures Python 3, pip3, and penv are installed and up-to-date.
+- Ensures Python 3, pip3, and penv are installed and up-to-date.
 
 ## Prerequisites
 
-    - Supported Operating Systems:
-      - Ubuntu 22.04 (native Linux or WSL2).
+- Supported Operating Systems:
+  - Ubuntu 22.04 (native Linux or WSL2).
+- Git Installed:
+  - Clone this repository to your local machine.
+- Python 3 (required for Ansible):
 
-    - Git Installed:
-      - Clone this repository to your local machine.
-
-    - Python 3 (required for Ansible):
-      ```
-      sudo apt update && sudo apt install -y python3 python3-pip
-      ```
+  ```
+  sudo apt update && sudo apt install -y python3 python3-pip
+  ```
 
 ## Setup Instructions
 
-1. ## Clone the Repository
+### 1. Clone the Repository
 
 Clone the repository into your desired directory:
 
@@ -51,7 +50,7 @@ git clone https://github.com/<your-username>/my_awesome_shell_setup.git
 cd my_awesome_shell_setup
 ```
 
-2. ## Run the Setup Script
+### 2. Run the Setup Script
 
 The main setup script will check for Ansible and initiate the playbook.
 
@@ -75,14 +74,14 @@ bash install_ansible.sh --extra-vars "update_configs=true update_zsh_from_repo=t
 
 ### Configuration Files
 
-    - Custom Zsh Configuration:
-      - `.zshrc`: Located in `roles/zsh/files/.zshrc`.
-      - `.p10k.zsh`: Located in `roles/zsh/files/.p10k.zsh`.
+- Custom Zsh Configuration:
+  - `.zshrc`: Located in `roles/zsh/files/.zshrc`.
+  - `.p10k.zsh`: Located in `roles/zsh/files/.p10k.zsh`.
 
-    - VS Code Settings:
-      - `settings.json`: Located in `roles/vscode/files/settings.json`.
-      - Extensions list: `roles/vscode/files/vscode-extensions.txt`.
-      - Profiles: `roles/vscode/files/Shanmeistro.code-profile`.
+- VS Code Settings:
+  - `settings.json`: Located in `roles/vscode/files/settings.json`.
+  - Extensions list: `roles/vscode/files/vscode-extensions.txt`.
+  - Profiles: `roles/vscode/files/Shanmeistro.code-profile`.
 
 ### Update Extensions
 
@@ -94,13 +93,15 @@ code --list-extensions > roles/vscode/files/vscode-extensions.txt
 
 ## How It Works
 
-1. Bash Script:
-   - Installs Ansible if not found.
-   - Runs the main playbook with optional flags for configuration updates.
+### 1. Bash Script:
 
-2. Ansible Playbook:
-   - Modularized roles for installing and configuring tools and environments.
-   - Detects whether running in WSL2 and adapts behavior (e.g., skips Docker installation).
+- Installs Ansible if not found.
+- Runs the main playbook with optional flags for configuration updates.
+
+### 2. Ansible Playbook:
+
+- Modularized roles for installing and configuring tools and environments.
+- Detects whether running in WSL2 and adapts behavior (e.g., skips Docker installation).
 
 ## Key Features
 
@@ -124,37 +125,41 @@ This setup automatically detects if it’s running in WSL2:
 
 ## Troubleshooting
 
-1. Permission Issues:
-   - If you encounter permission issues, ensure your user has sudo access and re-run the script.
+### 1. Permission Issues:
 
-2. Skipping Tasks:
-   - Tasks are skipped if the target state is already achieved (e.g., apps installed, files present).
-   - Use `--extra-vars "update_configs=true"` to force updates.
+- If you encounter permission issues, ensure your user has sudo access and re-run the script.
 
-3. Ansible Errors:
-   - Ensure you’re using Python 3:
+### 2. Skipping Tasks:
 
-   ```
+- Tasks are skipped if the target state is already achieved (e.g., apps installed, files present).
+- Use `--extra-vars "update_configs=true"` to force updates.
+
+### 3. Ansible Errors:
+
+- Ensure you’re using Python 3:
+
+```
    sudo apt install -y python3 python3-pip
-   ```
+```
     
-4. WSL-Specific Issues:
-   - Verify WSL2 is enabled with:
+### 4. WSL-Specific Issues:
 
-   ```
+- Verify WSL2 is enabled with:
+
+```
    wsl --list --verbose
-   ```
+```
 
 ## Contributing
 
 Contributions are welcome! If you’d like to suggest changes or report bugs:
 
-1. Fork this repository.
-2. Create a feature branch:
+### 1. Fork this repository.
+### 2. Create a feature branch:
 
 ```
 git checkout -b feature/new-feature
 ```
 
-3. Commit your changes and open a pull request.
+### 3. Commit your changes and open a pull request.
 
