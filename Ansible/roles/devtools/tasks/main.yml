@@ -1,0 +1,21 @@
+---
+- name: Detect if running in WSL2
+  shell: cat /proc/version
+  register: kernel_version
+  changed_when: false
+
+- name: Set WSL2 fact
+  set_fact:
+    is_wsl2: "{{ 'microsoft' in kernel_version.stdout and 'WSL2' in kernel_version.stdout }}"
+
+- name: Install Docker
+  apt:
+    name: docker.io
+    state: present
+  when: not is_wsl2
+
+- name: Install Kubernetes tools
+  apt:
+    name: kubeadm
+    state: present
+  when: not is_wsl2
