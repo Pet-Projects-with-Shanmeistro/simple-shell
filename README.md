@@ -41,9 +41,9 @@ This repository automates the setup of a custom shell and IDE environment for Li
   - Clone this repository to your local machine.
 - Python 3 (required for Ansible):
 
-  ```bash
+  ```text
   sudo apt update && sudo apt install -y python3 python3-pip
-  ```bash
+  ```
 
 ## Setup Instructions
 
@@ -51,10 +51,10 @@ This repository automates the setup of a custom shell and IDE environment for Li
 
 Clone the repository into your desired directory:
 
-```bash
+```text
 git clone https://github.com/<your-username>/my_awesome_shell_setup.git
 cd my_awesome_shell_setup
-```bash
+```
 
 ### 2. Run the Setup Script
 
@@ -64,17 +64,17 @@ The main setup script will check for Ansible and initiate the playbook.
 
 To perform the standard setup without overwriting existing configurations:
 
-```bash
-bash install_ansible.sh
-```bash
+```text
+./install_ansible.sh
+```
 
 ### Update Configuration Files
 
 If you want to overwrite existing configurations (e.g., `.zshrc`, `.p10k.zsh`), use the `--extra-vars` flag:
 
-```bash
-bash install_ansible.sh --extra-vars "update_configs=true update_zsh_from_repo=true"
-```bash
+```text
+./install_ansible.sh --extra-vars "update_configs=true update_zsh_from_repo=true"
+```
 
 ## Customizing the Setup
 
@@ -93,9 +93,9 @@ bash install_ansible.sh --extra-vars "update_configs=true update_zsh_from_repo=t
 
 To update the list of VS Code extensions:
 
-```bash
+```text
 code --list-extensions > roles/vscode/files/vscode-extensions.txt
-```bash
+```
 
 ## How It Works
 
@@ -132,24 +132,28 @@ This setup automatically detects if it’s running in WSL2:
 ## Example Usage with shell script
 
 ### 1. Standard Install Without Config Updates
-```bash
+
+```text
 ./install_ansible.sh
-```bash
+```
 
 ### 2. Update Only Zsh from Repo
-```bash
+
+```text
 ./install_ansible.sh --extra-vars "update_zsh_from_repo=true"
-```bash
+```
 
 ### 3. Update Everything (User Gets a Confirmation)
-```bash
+
+```text
 ./install_ansible.sh --extra-vars "update_zsh_from_repo=true update_configs=true"
-```bash
+```
 
 ### 4. Test Playbook Without Making Changes
-```bash
+
+```text
 ./install_ansible.sh --dry-run --extra-vars "update_zsh_from_repo=true"
-```bash
+```
 
 ## Troubleshooting
 
@@ -166,17 +170,17 @@ This setup automatically detects if it’s running in WSL2:
 
 - Ensure you’re using Python 3:
 
-```bash
+```text
    sudo apt install -y python3 python3-pip
-```bash
+```
 
 ### 4. WSL-Specific Issues
 
 - Verify WSL2 is enabled with:
 
-```bash
+```text
    wsl --list --verbose
-```bash
+```
 
 ## Contributing
 
@@ -186,8 +190,8 @@ Contributions are welcome! If you’d like to suggest changes or report bugs:
 
 ### 2. Create a feature branch
 
-```bash
+```text
 git checkout -b feature/new-feature
-```bash
+```
 
 ### 3. Commit your changes and open a pull request
