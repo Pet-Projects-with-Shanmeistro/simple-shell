@@ -1,0 +1,31 @@
+---
+- name: Install Zsh
+  apt:
+    name: zsh
+    state: present
+
+- name: Install Oh-My-Zsh
+  shell: |
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+  args:
+    creates: ~/.oh-my-zsh
+
+- name: Install Powerlevel10K
+  git:
+    repo: https://github.com/romkatv/powerlevel10k.git
+    dest: "{{ lookup('env', 'HOME') }}/.oh-my-zsh/custom/themes/powerlevel10k"
+    version: main
+
+- name: Apply custom .zshrc
+  copy:
+    src: files/.zshrc
+    dest: ~/.zshrc
+    backup: yes
+  when: update_configs
+
+- name: Apply custom Powerlevel10K configuration
+  copy:
+    src: files/.p10k.zsh
+    dest: ~/.p10k.zsh
+    backup: yes
+  when: update_configs

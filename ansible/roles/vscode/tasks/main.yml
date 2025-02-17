@@ -1,0 +1,19 @@
+---
+- name: Install VS Code
+  apt:
+    deb: https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64
+    state: present
+
+- name: Apply VS Code settings
+  copy:
+    src: files/settings.json
+    dest: ~/.config/Code/User/settings.json
+
+- name: Import VS Code profile
+  copy:
+    src: files/Shanmeistro.code-profile
+    dest: ~/.config/Code/User/profiles/Shanmeistro.code-profile
+
+- name: Install VS Code Extensions
+  shell: |
+    xargs -n 1 code --install-extension < files/vscode-extensions.txt
