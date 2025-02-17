@@ -1,5 +1,0 @@
----
-- name: Install Nerd Fonts
-  shell: |
-    wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.3.3/FiraCode.zip -O FiraCode.zip
-    unzip FiraCode.zip -d ~/.local/share/fonts && fc-cache -fv

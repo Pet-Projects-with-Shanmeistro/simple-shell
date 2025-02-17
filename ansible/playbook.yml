@@ -10,7 +10,7 @@
     - role: zsh
       vars:
         update_configs: "{{ update_configs }}"
-      when: update_zsh_fromrepo
+      when: update_zsh_from_repo
     - role: vscode
     - role: cloud-cli
     - role: devtools
