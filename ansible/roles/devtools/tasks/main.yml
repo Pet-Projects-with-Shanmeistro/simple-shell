@@ -8,7 +8,7 @@
   set_fact:
     is_wsl2: "{{ 'microsoft' in kernel_version.stdout and 'WSL2' in kernel_version.stdout }}"
 
-- name: Install Docker
+- name: Install Docker (skip for WSL2)
   apt:
     name: docker.io
     state: present

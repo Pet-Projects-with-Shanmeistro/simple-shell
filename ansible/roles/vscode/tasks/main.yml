@@ -1,4 +1,16 @@
 ---
+- name: Ensure VS Code config directory exists
+  file:
+    path: "{{ ansible_env.HOME }}/.config/Code/User"
+    state: directory
+    mode: '0755'
+
+- name: Apply VS Code settings
+  copy:
+    src: files/settings.json
+    dest: "{{ ansible_env.HOME }}/.config/Code/User/settings.json"
+    mode: '0644'
+
 - name: Install VS Code
   apt:
     deb: https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64
@@ -7,7 +19,9 @@
 - name: Apply VS Code settings
   copy:
     src: files/settings.json
-    dest: ~/.config/Code/User/settings.json
+    dest: "{{ ansible_env.HOME }}/.config/Code/User/settings.json"
+    mode: '0644'
+  become: no  # Avoid running as root
 
 - name: Import VS Code profile
   copy:

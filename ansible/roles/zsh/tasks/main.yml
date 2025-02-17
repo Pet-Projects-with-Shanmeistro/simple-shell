@@ -19,13 +19,15 @@
 - name: Apply custom .zshrc
   copy:
     src: files/.zshrc
-    dest: ~/.zshrc
+    dest: "{{ ansible_env.HOME }}/.zshrc"
+    mode: '0644'
     backup: yes
   when: update_configs
 
 - name: Apply custom Powerlevel10K configuration
   copy:
     src: files/.p10k.zsh
-    dest: ~/.p10k.zsh
+    dest: "{{ ansible_env.HOME }}/.p10k.zsh"
+    mode: '0644'
     backup: yes
   when: update_configs
