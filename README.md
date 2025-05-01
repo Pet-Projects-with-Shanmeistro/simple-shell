@@ -1,197 +1,166 @@
-# My Awesome Shell Setup 🚀
+# ✨ My Awesome Development Environment Setup ✨
 
-This repository automates the setup of a custom shell and IDE environment for Linux and WSL2 systems using Ansible. It is designed to streamline the installation and configuration of essential tools, settings, and profiles, ensuring a consistent and efficient development workflow.
+Welcome to **My Awesome Dev Environment Setup!** This repository provides a fully automated and customizable way to create a consistent, efficient, and personalized development environment on your local machine. Say goodbye to tedious manual configuration and hello to a ready-to-code setup in minutes!
 
-## Features
+---
 
-### VS Code Setup
+## 📖 Table of Contents
 
-- Installs VS Code.
-- Configures VS Code with custom profiles and settings.
-- Installs extensions from a pre-defined list.
+- [🚀 Benefits of Using This Setup](#-benefits-of-using-this-setup)
+- [🛠️ Prerequisites](#️-prerequisites)
+- [⚙️ Installation](#️-installation)
+- [💻 Usage](#-usage)
+- [⚙️ Running the Playbook Directly (Advanced)](#️-running-the-playbook-directly-advanced)
+- [📂 Roles Overview](#-roles-overview)
+- [🛠️ Managing Installed Tools](#️-managing-installed-tools)
+- [⚙️ Customization](#️-customization)
+- [🤝 Contributing](#-contributing)
 
-### Shell Customization
+---
 
-- Installs Zsh and Oh-My-Zsh.
-- Configures Powerlevel10K theme with custom .zshrc and .p10k.zsh files.
-- Supports skipping or updating existing configurations.
+## 🚀 Benefits of Using This Setup
 
-### Nerd Fonts
+- **Consistency:** Ensure a uniform development environment across different machines.
+- **Time-Saving:** Automate the installation of essential tools and configurations, saving you valuable setup time.
+- **Easy Customization:** Tailor your environment by simply editing a configuration file to include the tools you need.
+- **Modularity:** The setup is organized into logical roles, making it easy to understand and extend.
+- **Flexibility:** Supports both Bash and Zsh shells with options for popular prompt frameworks like Starship and Powerlevel10k.
 
-- Installs FiraCode Nerd Font for Powerline support.
+---
 
-### Development Tools
+## 🛠️ Prerequisites
 
-- Installs Docker, Kubernetes, and Terraform.
-- Ensures proper handling for WSL2 environments.
+Before you begin, ensure you have the following installed on your system:
 
-### Cloud CLI Tools
+- **Ansible:** Version 2.9 or higher (used for the automation).
+- **Git:** For cloning this repository.
+- **Curl:** For downloading necessary scripts and files.
+- **sudo Privileges:** Administrative rights are required for installing packages.
 
-- Installs the CLI tools for AWS and Azure.
+---
 
-### Python Environment
+## ⚙️ Installation
 
-- Ensures Python 3, pip3, and penv are installed and up-to-date.
-
-## Prerequisites
-
-- Supported Operating Systems:
-  - Ubuntu 22.04 (native Linux or WSL2).
-- Git Installed:
-  - Clone this repository to your local machine.
-- Python 3 (required for Ansible):
-
-  ```text
-  sudo apt update && sudo apt install -y python3 python3-pip
-  ```
-
-## Setup Instructions
+Follow these simple steps to set up your awesome development environment:
 
 ### 1. Clone the Repository
 
-Clone the repository into your desired directory:
-
-```text
-git clone https://github.com/<your-username>/my_awesome_shell_setup.git
-cd my_awesome_shell_setup
+```bash
+git clone <repository_url>
+cd my-awesome-shell-setup
 ```
 
-### 2. Run the Setup Script
+*(Replace `<repository_url>` with the actual URL of your repository.)*
 
-The main setup script will check for Ansible and initiate the playbook.
+### 2. Make the Installation Script Executable
 
-### Default Setup
-
-To perform the standard setup without overwriting existing configurations:
-
-```text
-./install_ansible.sh
+```bash
+chmod +x install_custom_shell.sh
 ```
 
-### Update Configuration Files
+### 3. Run the Installation Script
 
-If you want to overwrite existing configurations (e.g., `.zshrc`, `.p10k.zsh`), use the `--extra-vars` flag:
-
-```text
-./install_ansible.sh --extra-vars "update_configs=true update_zsh_from_repo=true"
+```bash
+./install_custom_shell.sh
 ```
 
-## Customizing the Setup
+This script will:
 
-### Configuration Files
+- Check for the necessary prerequisites.
+- Prompt you to choose your preferred shell (Bash or Zsh).
+- If you choose Zsh, it will ask for your preferred prompt framework (Oh My Zsh + Powerlevel10k or Starship).
+- Ask for confirmation before proceeding with the installation.
+- Run the Ansible playbook to configure your environment.
 
-- Custom Zsh Configuration:
-  - `.zshrc`: Located in `roles/zsh/files/.zshrc`.
-  - `.p10k.zsh`: Located in `roles/zsh/files/.p10k.zsh`.
+### 4. Customize Your Setup
 
-- VS Code Settings:
-  - `settings.json`: Located in `roles/vscode/files/settings.json`.
-  - Extensions list: `roles/vscode/files/vscode-extensions.txt`.
-  - Profiles: `roles/vscode/files/Shanmeistro.code-profile`.
+Before or after running the script, you can customize the tools to be installed by editing the `ansible/group_vars/all.yml` file. This file contains flags (e.g., `install_docker: false`) that you can set to `true` to include the corresponding tool in your setup.
 
-### Update Extensions
+### 5. Apply Changes
 
-To update the list of VS Code extensions:
+After the script completes, **restart your terminal** or run:
 
-```text
-code --list-extensions > roles/vscode/files/vscode-extensions.txt
+- `source ~/.bashrc` (for Bash)
+- `exec zsh` (for Zsh)
+
+---
+
+## 💻 Usage
+
+Once the installation is complete, you'll have a personalized development environment ready to go! Here are some tips:
+
+- **Explore Your New Shell:** Enjoy the enhanced features and prompt of your chosen shell (Bash with Starship or Zsh with Starship/Powerlevel10k).
+- **Customize Further:**
+  - **Starship:** Configure your Starship prompt by editing the `~/.config/starship.toml` file.
+  - **Powerlevel10k:** If you chose Zsh with Powerlevel10k, you can further customize it by running `p10k configure` in your terminal.
+- **Utilize Installed Tools:** The `sysadmin-tools` and `dev-tools` roles install a variety of useful utilities that are now at your fingertips.
+
+---
+
+### ⚙️ Running the Playbook Directly (Advanced)
+
+For more fine-grained control, you can run the Ansible playbook directly:
+
+```bash
+ansible-playbook -i ansible/inventory/localhost ansible/custom_dev_env.yml -K --tags <role_tag>
 ```
 
-## How It Works
+- `-K`: Prompts for the sudo password.
+- `--tags <role_tag>`: Allows you to run specific roles (e.g., shell, sysadmin-tools, dev-tools).
 
-### 1. Bash Script
+---
 
-- Installs Ansible if not found.
-- Runs the main playbook with optional flags for configuration updates.
+## 📂 Roles Overview
 
-### 2. Ansible Playbook
+This setup is organized into the following Ansible roles:
 
-- Modularized roles for installing and configuring tools and environments.
-- Detects whether running in WSL2 and adapts behavior (e.g., skips Docker installation).
+- **`common`:** Contains tasks that are common to all environments, such as basic system configurations.
+- **`shell`:** Configures your chosen shell (Bash or Zsh) and sets up the prompt.
+- **`sysadmin-tools`:** Installs essential system administration and networking utilities (e.g., htop, tmux, nmap).
+- **`dev-tools`:** Installs development-related tools, including Python, uv, ruff, taplo, Node.js (nvm), and more.
 
-## Key Features
+---
 
-### Modular Roles
+## 🛠️ Managing Installed Tools
 
-Each component is handled by an individual Ansible role, making it easy to add, remove, or customize:
+You can easily add or remove tools after the initial setup:
 
-- zsh: Installs and configures Zsh with Oh-My-Zsh and Powerlevel10K.
-- vscode: Sets up VS Code with custom profiles and extensions.
-- cloud-cli: Installs CLI tools for Azure and AWS.
-- devtools: Installs Docker, Kubernetes, and Terraform, while handling WSL2 specifics.
-- python: Ensures Python 3 and pip are installed, along with `penv`.
-- nerd-fonts: Installs FiraCode Nerd Font.
+1. **Edit `ansible/group_vars/all.yml`:** Modify the `install_*` flags in the Sysadmin Tools Role and Dev Tools Role sections. Set the flag to `true` to install a tool or `false` to prevent its installation (or removal on a subsequent run).
 
-## WSL2 and Native Linux
+2. **Run the Ansible Playbook:**
 
-This setup automatically detects if it’s running in WSL2:
+   ```bash
+   ./install_custom_shell.sh
+   ```
 
-- Skips Docker and Kubernetes installation if Docker Desktop with Kubernetes is already available.
-- Adjusts configurations as needed for compatibility.
+   Or, to target specific tool roles:
 
-## Example Usage with shell script
+   ```bash
+   ansible-playbook -i ansible/inventory/localhost ansible/custom_dev_env.yml -K --tags sysadmin-tools,dev-tools
+   ```
 
-### 1. Standard Install Without Config Updates
+Ansible will update your system based on the changes in `group_vars/all.yml`.
 
-```text
-./install_ansible.sh
-```
+⚠️ Removing Packages and Libraries:
 
-### 2. Update Only Zsh from Repo
+This script primarily installs tools using your system's package manager or via tools like pip and cargo. To completely remove a tool and its dependencies, you should use the appropriate uninstallation command for the package manager that installed it (e.g., `sudo apt remove <package>`, `brew uninstall <package>`, `pip uninstall <package>`, `cargo uninstall <package>`). Manual removal is recommended to avoid unintended consequences.
 
-```text
-./install_ansible.sh --extra-vars "update_zsh_from_repo=true"
-```
+---
 
-### 3. Update Everything (User Gets a Confirmation)
+## ⚙️ Customization
 
-```text
-./install_ansible.sh --extra-vars "update_zsh_from_repo=true update_configs=true"
-```
+Beyond the basic `group_vars/all.yml` configuration, you can further customize your environment by:
 
-### 4. Test Playbook Without Making Changes
+- **Modifying Role Tasks:** Edit the task files within the `ansible/roles/` directories to change installation procedures or add new tools.
+- **Creating New Roles:** Organize more complex customizations into new roles and include them in the `ansible/custom_dev_env.yml` playbook.
+- **Templating Configuration Files:** The `ansible/templates/` directory contains Jinja2 templates for shell configuration files. You can modify these templates to fine-tune your shell environment.
 
-```text
-./install_ansible.sh --dry-run --extra-vars "update_zsh_from_repo=true"
-```
+---
 
-## Troubleshooting
+## 🤝 Contributing
 
-### 1. Permission Issues
+Contributions to this project are welcome! Feel free to submit pull requests with improvements, bug fixes, or new features. Please follow standard Git contribution guidelines.
 
-- If you encounter permission issues, ensure your user has sudo access and re-run the script.
+---
 
-### 2. Skipping Tasks
-
-- Tasks are skipped if the target state is already achieved (e.g., apps installed, files present).
-- Use `--extra-vars "update_configs=true"` to force updates.
-
-### 3. Ansible Errors
-
-- Ensure you’re using Python 3:
-
-```text
-   sudo apt install -y python3 python3-pip
-```
-
-### 4. WSL-Specific Issues
-
-- Verify WSL2 is enabled with:
-
-```text
-   wsl --list --verbose
-```
-
-## Contributing
-
-Contributions are welcome! If you’d like to suggest changes or report bugs:
-
-### 1. Fork this repository
-
-### 2. Create a feature branch
-
-```text
-git checkout -b feature/new-feature
-```
-
-### 3. Commit your changes and open a pull request
+© 2025 Shannon | Licensed under [MIT License](LICENSE)

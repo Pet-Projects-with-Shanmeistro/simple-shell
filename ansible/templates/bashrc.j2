@@ -1,0 +1,100 @@
+# ~/.bashrc: executed by bash(1) for non-login shells.
+
+# If not running interactively, don't do anything
+case $- in
+    *i*) ;;
+      *) return;;
+esac
+
+# --- Basic Bash Configuration ---
+# History control
+export HISTCONTROL=ignoreboth:erasedups # ignoredups:ignorespace
+export HISTSIZE=10000
+export HISTFILESIZE=20000
+shopt -s histappend # Append to history, don't overwrite it
+shopt -s checkwinsize # Check window size after each command
+
+# Set colorful grep/ls aliases
+alias grep='grep --color=auto'
+alias egrep='egrep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias ls='ls --color=auto'
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+
+# Add ~/.local/bin to PATH if it exists
+if [ -d "$HOME/.local/bin" ]; then
+  export PATH="$HOME/.local/bin:$PATH"
+fi
+
+# Add potential paths for tools like nvm, pyenv, cargo if managed outside Ansible core PATH setup
+# export NVM_DIR="$HOME/.nvm"
+# [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # Loads nvm
+# export PYENV_ROOT="$HOME/.pyenv"
+# command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+# eval "$(pyenv init -)"
+
+
+# --- Select Your Prompt ---
+# Activated based on the 'bash_prompt_preference' variable in Ansible
+
+{% if bash_prompt_preference == 'starship' %}
+# --- Starship Prompt ---
+# Requires Starship binary installed
+export STARSHIP_CONFIG=~/.config/starship.toml
+eval "$(starship init bash)"
+
+{% elif bash_prompt_preference == 'omp' %}
+# --- Oh My Posh Prompt ---
+# Requires Oh My Posh binary installed and theme file present
+# Example assumes theme is at ~/.config/omp-theme.omp.json
+eval "$(oh-my-posh init bash --config ~/.config/omp-theme.omp.json)"
+
+{% elif bash_prompt_preference == 'manual_ps1' %}
+# --- Manual PS1 Prompt ---
+# Load git-prompt.sh if available (often installed with git)
+if [ -f /usr/share/git-core/contrib/completion/git-prompt.sh ]; then
+    source /usr/share/git-core/contrib/completion/git-prompt.sh
+elif [ -f /usr/local/etc/bash_completion.d/git-prompt.sh ]; then
+    source /usr/local/etc/bash_completion.d/git-prompt.sh
+fi
+
+# PS1 Configuration
+# Requires git-prompt.sh for __git_ps1
+# Define colours (adjust as needed)
+C_DEFAULT="\[\033[0m\]"
+C_USER="\[\033[0;32m\]" # Green
+C_HOST="\[\033[0;36m\]" # Cyan
+C_DIR="\[\033[1;34m\]"  # Bold Blue
+C_GIT="\[\033[0;33m\]"  # Yellow
+
+# Configure git-prompt behaviour (optional)
+export GIT_PS1_SHOWDIRTYSTATE=1
+export GIT_PS1_SHOWSTASHSTATE=1
+export GIT_PS1_SHOWUNTRACKEDFILES=1
+export GIT_PS1_SHOWUPSTREAM="auto"
+# export GIT_PS1_DESCRIBE_STYLE="branch"
+# export GIT_PS1_HIDE_IF_PWD_IGNORED=1
+
+# The actual PS1 string
+PS1="${C_USER}\u${C_DEFAULT}@${C_HOST}\h${C_DEFAULT}:${C_DIR}\w${C_DEFAULT}" # User@Host:Directory
+if command -v __git_ps1 >/dev/null; then
+  PS1+="\$(__git_ps1 ' (${C_GIT}%s${C_DEFAULT})')" # Add Git info if available
+fi
+PS1+="\n\$ " # Newline and prompt symbol ($)
+
+{% else %}
+# --- Default/Fallback Bash Prompt ---
+# Simple User@Host:Directory $
+PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+
+{% endif %}
+
+# --- User Customizations ---
+# Source local customizations if file exists
+if [ -f ~/.bashrc.local ]; then
+  source ~/.bashrc.local
+fi
+
+# --- END ---

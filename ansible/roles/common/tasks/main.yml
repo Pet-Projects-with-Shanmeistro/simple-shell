@@ -1,0 +1,49 @@
+---
+- name: Common Configurations
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: Ensure essential packages are installed
+      ansible.builtin.package:
+        name:
+          - curl
+          - wget
+          - unzip
+          - tar
+          - git
+        state: present
+      become: true
+      when: ansible_os_family in ['Linux', 'Darwin']
+
+    - name: Ensure basic directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ user_home }}/.cache"
+        - "{{ user_home }}/.local/share"
+      when: ansible_os_family in ['Linux', 'Darwin']
+
+    - name: Update package cache (Debian/Ubuntu)
+      ansible.builtin.apt:
+        update_cache: yes
+      become: true
+      when: ansible_os_family == 'Debian'
+
+    - name: Update package cache (RedHat/CentOS/Fedora)
+      ansible.builtin.yum:
+        update_cache: yes
+      become: true
+      when: ansible_os_family in ['RedHat', 'CentOS', 'Fedora']
+
+    - name: Update package cache (Arch Linux)
+      ansible.builtin.pacman:
+        sync: yes
+      become: true
+      when: ansible_os_family == 'Archlinux'
+
+    - name: Update package cache (macOS via Homebrew)
+      community.general.homebrew:
+        update_homebrew: yes
+      when: ansible_os_family == 'Darwin'

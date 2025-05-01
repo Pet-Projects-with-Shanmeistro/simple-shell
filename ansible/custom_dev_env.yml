@@ -1,0 +1,35 @@
+---
+- name: Configure Development Environment
+  hosts: localhost
+  become: yes
+  vars:
+    install_common: true
+    install_shell: true
+    install_sysadmin_tools: false # Optional tools
+    install_dev_tools: false     # Optional tools
+
+- name: Check if running inside WSL2
+  command: uname -r
+  register: uname_output
+  changed_when: false
+
+- name: Set is_wsl2 fact
+  set_fact:
+    is_wsl2: "{{ 'microsoft-standard' in uname_output.stdout }}"
+
+  roles:
+    - role: common
+      when: install_common
+      tags: common
+
+    - role: shell
+      when: install_shell
+      tags: shell
+
+    - role: sysadmin-tools
+      when: install_sysadmin_tools
+      tags: sysadmin-tools
+
+    - role: dev-tools
+      when: install_dev_tools
+      tags: dev-tools

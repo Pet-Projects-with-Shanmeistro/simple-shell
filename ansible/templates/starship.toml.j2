@@ -1,0 +1,146 @@
+    # ~/.config/starship.toml - Tokyo Night Preset Example
+    # Based on common Tokyo Night color palettes. Tweak as needed.
+
+    add_newline = true # Optional: Add blank line between prompts
+
+    # Palette (Colors based on Tokyo Night Storm variant)
+    # See: https://github.com/enkia/tokyo-night-vscode-theme
+    [palette]
+    background = '#24283b'
+    foreground = '#c0caf5'
+    black = '#1D202F'
+    red = '#f7768e'
+    green = '#9ece6a'
+    yellow = '#e0af68'
+    blue = '#7aa2f7'
+    purple = '#bb9af7'
+    cyan = '#7dcfff'
+    white = '#a9b1d6'
+    orange = '#ff9e64' # Often used for warnings or git changes
+
+    # Prompt Character
+    [character]
+    success_symbol = "[➜](bold fg:green)"
+    error_symbol = "[✗](bold fg:red)"
+    vicmd_symbol = "[❮](bold fg:green)"
+
+    # General Formatting
+    format = """$username$hostname$directory$git_branch$git_status$docker_context$kubernetes$package$nodejs$python$rust$golang$conda$cmd_duration$line_break$character"""
+
+    # User Module
+    [username]
+    style_user = "fg:purple bold"
+    style_root = "fg:red bold"
+    format = "[$user]($style_user)@"
+    show_always = true
+
+    # Hostname Module
+    [hostname]
+    style = "fg:purple bold"
+    format = "[$hostname]($style) "
+    ssh_only = false # Show even on local machine
+    disabled = false
+
+    # Directory Module
+    [directory]
+    style = "fg:blue bold"
+    format = "in [$path]($style)[$read_only]($read_only_style) "
+    truncation_length = 4
+    truncate_to_repo = true # Shorten path within Git repos
+    fish_style_pwd_dir_length = 1 # Show only last dir in fish style
+    read_only = "🔒"
+    read_only_style = "fg:yellow"
+
+    # Git Branch Module
+    [git_branch]
+    symbol = "🌱 "
+    style = "fg:green bold"
+    format = "on [$symbol$branch]($style) "
+    truncation_length = 16
+    truncation_symbol = "…"
+
+    # Git Status Module
+    [git_status]
+    style = "fg:yellow"
+    format = "([$all_status$ahead_behind]($style)) "
+    conflicted = "=${count}"
+    ahead = "⇡${count}"
+    behind = "⇣${count}"
+    diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+    untracked = "?${count}"
+    stashed = "\$${count}"
+    modified = "!${count}"
+    staged = "+${count}"
+    renamed = "»${count}"
+    deleted = "✘${count}"
+
+    # Docker Context
+    [docker_context]
+    symbol = "🐳 "
+    style = "fg:cyan bold"
+    format = "via [$symbol$context]($style) "
+    only_with_files = false
+    disabled = false
+
+    # Kubernetes Context
+    [kubernetes]
+    symbol = "☸️ "
+    style = "fg:purple bold"
+    format = 'on [$symbol$context( \($namespace\))]($style) '
+    disabled = false # Enable/Disable based on whether you use K8s often
+    detect_extensions = ["yaml", "yml"]
+
+    # Package Version (e.g., Node.js, Python)
+    [package]
+    symbol = "📦 "
+    style = "fg:red bold"
+    format = "is [$symbol$version]($style) "
+    display_private = false
+    disabled = false
+
+    [nodejs]
+    symbol = " " # Nerd Font icon for Node.js
+    style = "fg:green bold"
+    format = "via [$symbol($version)]($style) "
+    disabled = false
+
+    [python]
+    symbol = "🐍 " # or " " Nerd Font icon
+    style = "fg:yellow bold"
+    format = 'via [$symbol$pyenv_prefix($version)(\($virtualenv\))]($style) '
+    pyenv_version_name = true
+    python_binary = ["./venv/bin/python", "python", "python3", "python2"]
+    disabled = false
+
+    [rust]
+    symbol = "🦀 "
+    style = "fg:orange bold"
+    format = "via [$symbol($version)]($style) "
+    disabled = false
+
+    [golang]
+    symbol = "🐹 " # or " " Nerd Font icon
+    style = "fg:cyan bold"
+    format = "via [$symbol($version)]($style) "
+    disabled = false
+
+    [conda]
+    symbol = " C "
+    style = "fg:green bold"
+    format = "via [$symbol$environment]($style) "
+    ignore_base = false
+    disabled = false
+
+    # Command Duration
+    [cmd_duration]
+    min_time = 1000 # Show only for commands taking longer than 1s
+    style = "fg:yellow italic"
+    format = "took [$duration]($style) "
+    show_milliseconds = false
+    disabled = false
+
+    # Line Break
+    [line_break]
+    disabled = false # Keep true if you want a single-line prompt
+
+    
