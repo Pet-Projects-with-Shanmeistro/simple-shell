@@ -141,7 +141,9 @@ You can easily add or remove tools after the initial setup:
 
 Ansible will update your system based on the changes in `group_vars/all.yml`.
 
-⚠️ Removing Packages and Libraries:
+---
+
+## ⚠️ Removing Packages and Libraries
 
 This script primarily installs tools using your system's package manager or via tools like pip and cargo. To completely remove a tool and its dependencies, you should use the appropriate uninstallation command for the package manager that installed it (e.g., `sudo apt remove <package>`, `brew uninstall <package>`, `pip uninstall <package>`, `cargo uninstall <package>`). Manual removal is recommended to avoid unintended consequences.
 
