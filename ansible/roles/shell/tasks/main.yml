@@ -1,127 +1,108 @@
 ---
-- name: Configure User Shell Environment
-  hosts: localhost
+- name: Install Zsh if preferred and not already installed
   become: yes
-  vars:
-    # Variables will ideally be defined in group_vars/all.yml or shell.yml
-    preferred_shell: "/bin/bash" # Default
-    bash_prompt_preference: "starship" # 'none' or 'starship'
-    zsh_prompt_preference: "none"   # 'none', 'starship', or 'p10k'
-    config_dir: "{{ user_home }}/.config"
-    local_bin_dir: "{{ user_home }}/.local/bin"
-    omz_path: "{{ user_home }}/.oh-my-zsh"
-    p10k_theme_path_omz: "{{ omz_path }}/custom/themes/powerlevel10k"
-    p10k_config_path: "{{ user_home }}/.p10k.zsh"
-    starship_config_path: "{{ config_dir }}/starship.toml"
-    user_home: "{{ ansible_user_dir }}"
-    install_nerd_fonts: true # Flag to control Nerd Fonts installation
+  ansible.builtin.package:
+    name: zsh
+    state: present
+  register: zsh_install_result
+  when: preferred_shell == "/usr/bin/zsh" and not ansible_check_mode
+  failed_when: zsh_install_result is defined and zsh_install_result.failed
+  notify: Restart Shell Service # If such a service exists - might not be relevant
 
-  tasks:
-    - name: Ensure base directory structure exists
-      ansible.builtin.file:
-        path: "{{ item }}"
-        state: directory
-        mode: '0755'
-      loop:
-        - "{{ config_dir }}"
-        - "{{ local_bin_dir }}"
-      when: ansible_os_family in ['Linux', 'Darwin'] # Target Linux and macOS
+- name: Install Starship prompt
+  become: yes
+  ansible.builtin.shell: curl -sS https://starship.rs/install.sh | sh -s -- -y
+  args:
+    creates: "{{ user_home }}/.local/bin/starship"
+  register: starship_install_result
+  when: prompt_framework == "starship"
+  failed_when: starship_install_result is defined and starship_install_result.rc != 0
 
-    - name: Install Zsh package if preferred
-      ansible.builtin.package:
-        name: zsh
-        state: present
-      become: true
-      when: preferred_shell is search('zsh') and ansible_os_family in ['Linux', 'Darwin']
+- name: Ensure Starship configuration directory exists
+  ansible.builtin.file:
+    path: "{{ config_dir }}"
+    state: directory
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_gid }}"
+    mode: '0755'
+  when: prompt_framework == "starship"
 
-    - name: Set user's default shell if preferred
-      ansible.builtin.user:
-        name: "{{ ansible_user_id }}"
-        shell: "{{ preferred_shell }}"
-      become: true
-      when: preferred_shell is defined and preferred_shell != "" and ansible_os_family in ['Linux', 'Darwin']
+- name: Create Starship configuration file (if not exists)
+  ansible.builtin.file:
+    path: "{{ starship_config_path }}"
+    state: touch
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_gid }}"
+    mode: '0644'
+  when: prompt_framework == "starship" and not (lookup('file', starship_config_path) | length > 0)
 
-    # --- Nerd Fonts Installation ---
-    - name: Install Nerd Fonts (Debian/Ubuntu)
-      ansible.builtin.package:
-        name: fonts-firacode-nerd
-        state: present
-      become: true
-      when: ansible_os_family == 'Debian' and install_nerd_fonts
+- name: Install Oh My Zsh (for Powerlevel10k)
+  become: yes
+  ansible.builtin.git:
+    repo: https://github.com/ohmyzsh/ohmyzsh.git
+    dest: "{{ omz_path }}"
+    depth: 1
+  register: omz_install_result
+  when: prompt_framework == "p10k" and not (lookup('file', omz_path) | length > 0)
+  failed_when: omz_install_result is defined and omz_install_result.failed
 
-    - name: Install Nerd Fonts (Arch Linux)
-      ansible.builtin.package:
-        name: nerd-fonts-fira-code
-        state: present
-      become: true
-      when: ansible_os_family == 'Archlinux' and install_nerd_fonts
+- name: Install Powerlevel10k theme (via Oh My Zsh custom themes)
+  become: yes
+  ansible.builtin.git:
+    repo: https://github.com/romkatv/powerlevel10k.git
+    dest: "{{ p10k_theme_path_omz }}"
+    depth: 1
+  register: p10k_install_result
+  when: prompt_framework == "p10k" and not (lookup('file', p10k_theme_path_omz) | length > 0) and (lookup('file', omz_path) | length > 0)
+  failed_when: p10k_install_result is defined and p10k_install_result.failed
 
-    - name: Install Nerd Fonts (macOS via Homebrew)
-      community.general.homebrew_tap:
-        name: homebrew/cask-fonts
-      when: ansible_os_family == 'Darwin' and install_nerd_fonts
+- name: Set Zsh theme to Powerlevel10k in .zshrc
+  ansible.builtin.lineinfile:
+    path: "{{ user_home }}/.zshrc"
+    regexp: '^ZSH_THEME=".*"'
+    line: 'ZSH_THEME="powerlevel10k/powerlevel10k"'
+    create: true
+  register: zsh_theme_set_result
+  when: preferred_shell == "/usr/bin/zsh" and prompt_framework == "p10k"
+  failed_when: zsh_theme_set_result is defined and zsh_theme_set_result.failed
 
-    - name: Install Nerd Fonts (macOS via Homebrew - FiraCode Nerd Font)
-      community.general.homebrew_cask:
-        name: font-fira-code-nerd-font
-        state: present
-      when: ansible_os_family == 'Darwin' and install_nerd_fonts
+- name: Configure Powerlevel10k zshrc (basic - user will likely customize)
+  ansible.builtin.copy:
+    content: |
+      # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+      [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+    dest: "{{ user_home }}/.p10k.zsh"
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_gid }}"
+    mode: '0644'
+  register: p10k_config_result
+  when: preferred_shell == "/usr/bin/zsh" and prompt_framework == "p10k" and not (lookup('file', "{{ user_home }}/.p10k.zsh") | length > 0)
+  failed_when: p10k_config_result is defined and p10k_config_result.failed
 
-    # --- Starship Installation and Configuration ---
-    - name: Install Starship binary if selected for Bash or Zsh
-      ansible.builtin.shell: |
-        curl -sS https://starship.rs/install.sh | sh -s -- --yes --bin-dir {{ local_bin_dir }}
-      args:
-        creates: "{{ local_bin_dir }}/starship"
-      when: (bash_prompt_preference == 'starship' or zsh_prompt_preference == 'starship') and ansible_os_family in ['Linux', 'Darwin']
+- name: Ensure Starship initialization is in shell configuration
+  block:
+    - name: Ensure Starship initialization in .bashrc
+      ansible.builtin.lineinfile:
+        path: "{{ user_home }}/.bashrc"
+        line: eval "$(starship init bash)"
+        create: true
+      register: bash_starship_init_result
+      failed_when: bash_starship_init_result is defined and bash_starship_init_result.failed
+    - name: Ensure Starship initialization in .zshrc
+      ansible.builtin.lineinfile:
+        path: "{{ user_home }}/.zshrc"
+        line: eval "$(starship init zsh)"
+        create: true
+      register: zsh_starship_init_result
+      failed_when: zsh_starship_init_result is defined and zsh_starship_init_result.failed
+      when: preferred_shell == "/usr/bin/zsh"
+  when: prompt_framework == "starship"
 
-    - name: Template Starship config (Tokyo Night preset)
-      ansible.builtin.template:
-        src: starship.toml.j2
-        dest: "{{ starship_config_path }}"
-        mode: '0644'
-        backup: yes
-      when: (bash_prompt_preference == 'starship' or zsh_prompt_preference == 'starship') and ansible_os_family in ['Linux', 'Darwin']
-
-    # --- Oh My Zsh Installation and Powerlevel10k ---
-    - name: Install Oh My Zsh if P10k is preferred for Zsh
-      ansible.builtin.shell: |
-        export ZSH="{{ omz_path }}" && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-      args:
-        creates: "{{ omz_path }}/oh-my-zsh.sh"
-      environment:
-        ZSH: "{{ omz_path }}"
-      when: preferred_shell is search('zsh') and zsh_prompt_preference == 'p10k' and ansible_os_family in ['Linux', 'Darwin']
-
-    - name: Install Powerlevel10k theme for OMZ if preferred
-      ansible.builtin.git:
-        repo: 'https://github.com/romkatv/powerlevel10k.git'
-        dest: "{{ p10k_theme_path_omz }}"
-        depth: 1
-        version: v1.20.0
-      when: preferred_shell is search('zsh') and zsh_prompt_preference == 'p10k' and ansible_os_family in ['Linux', 'Darwin']
-
-    - name: Template default P10k config file if preferred
-      ansible.builtin.template:
-        src: p10k.zsh.j2
-        dest: "{{ p10k_config_path }}"
-        mode: '0644'
-        backup: yes
-      when: preferred_shell is search('zsh') and zsh_prompt_preference == 'p10k' and ansible_os_family in ['Linux', 'Darwin']
-
-    # --- Template Shell Configuration Files ---
-    - name: Template .bashrc file
-      ansible.builtin.template:
-        src: bashrc.j2 # Single template
-        dest: "{{ user_home }}/.bashrc"
-        mode: '0644'
-        backup: yes
-      when: ansible_os_family in ['Linux', 'Darwin']
-
-    - name: Template .zshrc file
-      ansible.builtin.template:
-        src: zshrc.j2 # Single template
-        dest: "{{ user_home }}/.zshrc"
-        mode: '0644'
-        backup: yes
-      when: preferred_shell is search('zsh') and ansible_os_family in ['Linux', 'Darwin']
+- name: Set preferred shell for user
+  become: yes
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    shell: "{{ preferred_shell }}"
+  register: set_shell_result
+  when: preferred_shell != ansible_user_shell and not ansible_check_mode
+  failed_when: set_shell_result is defined and set_shell_result.failed

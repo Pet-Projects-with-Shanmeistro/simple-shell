@@ -1,257 +1,108 @@
 ---
-- name: Install Development Tools
-  hosts: localhost
+- name: Install Python and pip (system level)
   become: yes
-  vars:
-    install_uv: true
-    install_taplo: true
-    python_versions:
-      - "3.8"
-      - "3.11"
+  ansible.builtin.package:
+    name:
+      - python3
+      - python3-pip
+    state: present
+  register: python_system_install_result
+  failed_when: python_system_install_result is defined and python_system_install_result.failed
 
-  tasks:
-    # --- Install dependencies for building Python versions ---
-    - name: Install build dependencies for pyenv (Debian/Ubuntu)
-      ansible.builtin.package:
-        name:
-          - make
-          - build-essential
-          - libssl-dev
-          - zlib1g-dev
-          - libbz2-dev
-          - libreadline-dev
-          - libsqlite3-dev
-          - wget
-          - curl
-          - llvm
-          - libncurses5-dev
-          - libncursesw5-dev
-          - xz-utils
-          - tk-dev
-          - libffi-dev
-          - liblzma-dev
-        state: present
-      become: true
-      when: install_pyenv | default(false) and ansible_os_family == 'Debian'
+- name: Install uv
+  become: yes
+  ansible.builtin.pip:
+    name: uv
+    executable: pip3
+    state: present
+  register: uv_install_result
+  failed_when: uv_install_result is defined and uv_install_result.failed
 
-    - name: Install build dependencies for pyenv (RedHat/CentOS/Fedora)
-      ansible.builtin.package:
-        name:
-          - make
-          - gcc
-          - openssl-devel
-          - zlib-devel
-          - bzip2-devel
-          - readline-devel
-          - sqlite-devel
-          - wget
-          - curl
-          - llvm
-          - ncurses-devel
-          - xz-devel
-          - tk-devel
-          - libffi-devel
-          - libuuid-devel
-        state: present
-      become: true
-      when: install_pyenv | default(false) and ansible_os_family in ['RedHat', 'CentOS', 'Fedora']
+- name: Install ruff via uv
+  become: yes
+  ansible.builtin.pip:
+    name: ruff
+    executable: pip3
+    state: present
+  register: ruff_install_result
+  failed_when: ruff_install_result is defined and ruff_install_result.failed
 
-    - name: Install pyenv (macOS via Homebrew)
-      community.general.homebrew_cask:
-        name: pyenv
-        state: present
-      when: install_pyenv | default(false) and ansible_os_family == 'Darwin'
+- name: Install taplo via uv
+  become: yes
+  ansible.builtin.pip:
+    name: taplo
+    executable: pip3
+    state: present
+  register: taplo_install_result
+  failed_when: taplo_install_result is defined and taplo_install_result.failed
 
-    - name: Install pyenv (Linux via git)
-      ansible.builtin.git:
-        repo: https://github.com/pyenv/pyenv.git
-        dest: "{{ user_home }}/.pyenv"
-        version: master # Or a specific tag
-      when: install_pyenv | default(false) and ansible_os_family in ['Linux']
+- name: Install pyenv
+  become: yes
+  ansible.builtin.git:
+    repo: https://github.com/pyenv/pyenv.git
+    dest: "{{ user_home }}/.pyenv"
+    depth: 1
+  register: pyenv_install_result
+  failed_when: pyenv_install_result is defined and pyenv_install_result.failed
 
-    - name: Add pyenv to shell configuration (Bash)
-      ansible.builtin.blockinfile:
+- name: Add pyenv to shell configuration
+  block:
+    - name: Add pyenv init to .bashrc
+      ansible.builtin.lineinfile:
         path: "{{ user_home }}/.bashrc"
-        block: |
+        line: |
           export PYENV_ROOT="$HOME/.pyenv"
           command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
           eval "$(pyenv init -)"
-        marker: "# {mark} ANSIBLE MANAGED PYENV"
-      when: install_pyenv | default(false) and preferred_shell is search('bash') and ansible_os_family in ['Linux', 'Darwin']
-
-    - name: Add pyenv to shell configuration (Zsh)
-      ansible.builtin.blockinfile:
+        create: true
+      register: bash_pyenv_init_result
+      failed_when: bash_pyenv_init_result is defined and bash_pyenv_init_result.failed
+    - name: Add pyenv init to .zshrc
+      ansible.builtin.lineinfile:
         path: "{{ user_home }}/.zshrc"
-        block: |
+        line: |
           export PYENV_ROOT="$HOME/.pyenv"
           command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
           eval "$(pyenv init -)"
-        marker: "# {mark} ANSIBLE MANAGED PYENV"
-      when: install_pyenv | default(false) and preferred_shell is search('zsh') and ansible_os_family in ['Linux', 'Darwin']
+        create: true
+      register: zsh_pyenv_init_result
+      failed_when: zsh_pyenv_init_result is defined and zsh_pyenv_init_result.failed
+  when: preferred_shell in ["/bin/bash", "/usr/bin/zsh"]
 
-    - name: Install specified Python versions via pyenv
-      ansible.builtin.command: pyenv install {{ item }}
-      loop: "{{ python_versions }}"
-      become: true
-      when: install_pyenv | default(false) and ansible_os_family in ['Linux', 'Darwin']
-      ignore_errors: yes # In case a version is already installed
+- name: Install specified Python versions via pyenv
+  become: yes
+  ansible.builtin.command:
+    cmd: source ~/.pyenv/bin/pyenv.sh && pyenv install {{ item }}
+    creates: "{{ user_home }}/.pyenv/versions/{{ item }}"
+  loop: "{{ python_versions | default([]) }}"
+  register: pyenv_python_install_result
+  failed_when: pyenv_python_install_result is defined and pyenv_python_install_result.rc != 0
 
-    - name: Set global Python version (optional - defaults to system if not set)
-      ansible.builtin.command: pyenv global {{ python_versions[0] }} # Set the first version as global
-      become: true
-      when: install_pyenv | default(false) and python_versions | length > 0 and set_global_python | default(false) and ansible_os_family in ['Linux', 'Darwin']
+- name: Set global Python version to system (optional - can be managed per project)
+  become: yes
+  ansible.builtin.command:
+    cmd: source ~/.pyenv/bin/pyenv.sh && pyenv global system
+  when: python_versions | default([]) | length == 0 # Only set if no specific versions requested
 
-    - name: Create Python virtual environments
-      ansible.builtin.command: python{{ item }} -m venv ~/environments/python{{ item.replace('.', '') }}
-      loop: "{{ python_versions }}"
-      when: ansible_os_family in ['Linux', 'Darwin']
+- name: Install Node.js via NVM
+  become: yes
+  ansible.builtin.shell:
+    cmd: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+    creates: "{{ user_home }}/.nvm/nvm.sh"
+  register: nvm_install_result
+  failed_when: nvm_install_result is defined and nvm_install_result.rc != 0
 
-    # --- Python Package Management (uv) ---
-    - name: Install uv (via pip - assuming Python is available)
-      ansible.builtin.pip:
-        name: uv
-        state: present
-      when: install_uv | default(false) and ansible_os_family in ['Linux', 'Darwin']
+- name: Ensure Node.js is installed
+  become: yes
+  ansible.builtin.shell:
+    cmd: source ~/.nvm/nvm.sh && nvm install --lts
+    creates: "{{ user_home }}/.nvm/versions/node/v20.13.0/bin/node"
+  register: node_install_result
+  failed_when: node_install_result is defined and node_install_result.rc != 0
 
-    # --- Python Linter/Formatter (ruff) ---
-    - name: Install ruff (via pip - assuming Python is available)
-      ansible.builtin.pip:
-        name: ruff
-        state: present
-      when: install_ruff | default(false) and ansible_os_family in ['Linux', 'Darwin']
-
-    # --- Rust and TOML Language Support (taplo) ---
-    - name: Install Rust and Cargo (using rustup)
-      ansible.builtin.shell: |
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-      args:
-        creates: "{{ user_home }}/.cargo/bin/rustc"
-      when: install_taplo | default(false) and ansible_os_family in ['Linux', 'Darwin']
-
-    - name: Add Cargo to shell configuration (Bash)
-      ansible.builtin.blockinfile:
-        path: "{{ user_home }}/.bashrc"
-        block: |
-          export PATH="$HOME/.cargo/bin:$PATH"
-        marker: "# {mark} ANSIBLE MANAGED CARGO"
-      when: install_taplo | default(false) and preferred_shell is search('bash') and ansible_os_family in ['Linux', 'Darwin']
-
-    - name: Add Cargo to shell configuration (Zsh)
-      ansible.builtin.blockinfile:
-        path: "{{ user_home }}/.zshrc"
-        block: |
-          export PATH="$HOME/.cargo/bin:$PATH"
-        marker: "# {mark} ANSIBLE MANAGED CARGO"
-      when: install_taplo | default(false) and preferred_shell is search('zsh') and ansible_os_family in ['Linux', 'Darwin']
-
-    - name: Install taplo (via cargo)
-      ansible.builtin.command: cargo install taplo --root {{ local_bin_dir }}
-      args:
-        creates: "{{ local_bin_dir }}/taplo"
-      when: install_taplo | default(false) and ansible_os_family in ['Linux', 'Darwin']
-
-    # --- Node Version Manager (nvm) ---
-    - name: Install nvm
-      block:
-        - name: Install nvm via curl
-          ansible.builtin.shell: |
-            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-          args:
-            creates: "{{ user_home }}/.nvm/nvm.sh"
-          register: nvm_install_output
-          changed_when: "'Already up-to-date' not in nvm_install_output.stdout"
-
-        - name: Add nvm to shell configuration (Bash)
-          ansible.builtin.blockinfile:
-            path: "{{ user_home }}/.bashrc"
-            block: |
-              export NVM_DIR="$HOME/.nvm"
-              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-              [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-            marker: "# {mark} ANSIBLE MANAGED NVM"
-          when: install_nvm | default(false) and preferred_shell is search('bash') and ansible_os_family in ['Linux', 'Darwin']
-
-        - name: Add nvm to shell configuration (Zsh)
-          ansible.builtin.blockinfile:
-            path: "{{ user_home }}/.zshrc"
-            block: |
-              export NVM_DIR="$HOME/.nvm"
-              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-              [ -s "$NVM_DIR/zsh_completion" ] && \. "$NVM_DIR/zsh_completion"  # This loads nvm zsh_completion
-            marker: "# {mark} ANSIBLE MANAGED NVM"
-          when: install_nvm | default(false) and preferred_shell is search('zsh') and ansible_os_family in ['Linux', 'Darwin']
-      when: install_nvm | default(false)
-
-    # --- Conda Environment Manager ---
-    - name: Install Conda (Miniconda - Linux/macOS)
-      block:
-        - name: Download Miniconda installer (Linux)
-          ansible.builtin.get_url:
-            url: "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
-            dest: /tmp/miniconda.sh
-            mode: '0755'
-          when: install_conda | default(false) and ansible_os_family == 'Linux' and ansible_architecture == 'x86_64'
-
-        - name: Download Miniconda installer (macOS)
-          ansible.builtin.get_url:
-            url: "https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh"
-            dest: /tmp/miniconda.sh
-            mode: '0755'
-          when: install_conda | default(false) and ansible_os_family == 'Darwin' and ansible_architecture == 'x86_64'
-
-        - name: Install Miniconda
-          ansible.builtin.shell: bash /tmp/miniconda.sh -b -p "{{ user_home }}/miniconda3"
-          args:
-            creates: "{{ user_home }}/miniconda3"
-          become: true
-          when: install_conda | default(false) and ansible_os_family in ['Linux', 'Darwin']
-
-        - name: Add Conda to shell configuration (Bash)
-          ansible.builtin.blockinfile:
-            path: "{{ user_home }}/.bashrc"
-            block: |
-              # >>> conda initialize >>>
-              # !! Contents within this block are managed by 'conda init' !!
-              __conda_setup="$('{{ user_home }}/miniconda3/bin/conda' shell.bash hook 2>&1)"
-              if [ $? -eq 0 ]; then
-                  eval "$__conda_setup"
-              else
-                  if [ -f "{{ user_home }}/miniconda3/etc/profile.d/conda.sh" ]; then
-                      . "{{ user_home }}/miniconda3/etc/profile.d/conda.sh"
-                  else
-                      export PATH="{{ user_home }}/miniconda3/bin:$PATH"
-                  fi
-              fi
-              unset __conda_setup
-              # <<< conda initialize <<<
-            marker: "# {mark} ANSIBLE MANAGED CONDA"
-          when: install_conda | default(false) and preferred_shell is search('bash') and ansible_os_family in ['Linux', 'Darwin']
-
-        - name: Add Conda to shell configuration (Zsh)
-          ansible.builtin.blockinfile:
-            path: "{{ user_home }}/.zshrc"
-            block: |
-              # >>> conda initialize >>>
-              # !! Contents within this block are managed by 'conda init' !!
-              __conda_setup="$('{{ user_home }}/miniconda3/bin/conda' shell.zsh hook 2>&1)"
-              if [ $? -eq 0 ]; then
-                  eval "$__conda_setup"
-              else
-                  if [ -f "{{ user_home }}/miniconda3/etc/profile.d/conda.sh" ]; then
-                      . "{{ user_home }}/miniconda3/etc/profile.d/conda.sh"
-                  else
-                      export PATH="{{ user_home }}/miniconda3/bin:$PATH"
-                  fi
-              fi
-              unset __conda_setup
-              # <<< conda initialize <<<
-            marker: "# {mark} ANSIBLE MANAGED CONDA"
-          when: install_conda | default(false) and preferred_shell is search('zsh') and ansible_os_family in ['Linux', 'Darwin']
-      when: install_conda | default(false)
-
-    # --- HTTPie (User-friendly curl alternative) ---
-    - name: Install httpie (via pip - assuming Python is available)
-      ansible.builtin.pip:
-        name: httpie
-        state: present
-      when: install_httpie | default(false) and ansible_os_family in ['Linux', 'Darwin']
+- name: Install npm globally
+  become: yes
+  ansible.builtin.shell:
+    cmd: source ~/.nvm/nvm.sh && nvm use --lts && npm install -g npm
+  register: npm_install_result
+  failed_when: npm_install_result is defined and npm_install_result.rc != 0

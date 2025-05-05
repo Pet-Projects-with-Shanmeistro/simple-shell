@@ -1,35 +1,46 @@
 ---
-- name: Configure Development Environment
-  hosts: localhost
-  become: yes
+- hosts: localhost
+  connection: local
+  become: yes # Generally needed for most tasks
+
   vars:
-    install_common: true
-    install_shell: true
-    install_sysadmin_tools: false # Optional tools
-    install_dev_tools: false     # Optional tools
+    user_home: "{{ ansible_user_dir }}"
+    config_dir: "{{ user_home }}/.config"
+    local_bin_dir: "{{ user_home }}/.local/bin"
 
-- name: Check if running inside WSL2
-  command: uname -r
-  register: uname_output
-  changed_when: false
+    # Starship configuration file path
+    starship_config_path: "{{ config_dir }}/starship.toml"
 
-- name: Set is_wsl2 fact
-  set_fact:
-    is_wsl2: "{{ 'microsoft-standard' in uname_output.stdout }}"
+    # P10k configuration file path
+    p10k_config_path: "{{ user_home }}/.p10k.zsh"
 
-  roles:
-    - role: common
-      when: install_common
-      tags: common
+    # Oh My Zsh path
+    omz_path: "{{ user_home }}/.oh-my-zsh"
+    omz_custom_path: "{{ omz_path }}/custom"
+    omz_themes_path: "{{ omz_custom_path }}/themes"
+    p10k_theme_path_omz: "{{ omz_themes_path }}/powerlevel10k"
 
-    - role: shell
-      when: install_shell
-      tags: shell
+  tasks:
+    - name: Include common role (basic setup)
+      ansible.builtin.include_role:
+        name: common
+      tags:
+        - common
 
-    - role: sysadmin-tools
-      when: install_sysadmin_tools
-      tags: sysadmin-tools
+    - name: Include shell role (shell and prompt config)
+      ansible.builtin.include_role:
+        name: shell
+      tags:
+        - shell
 
-    - role: dev-tools
-      when: install_dev_tools
-      tags: dev-tools
+    - name: Include sysadmin-tools role
+      ansible.builtin.include_role:
+        name: sysadmin-tools
+      tags:
+        - sysadmin-tools
+
+    - name: Include dev-tools role
+      ansible.builtin.include_role:
+        name: dev-tools
+      tags:
+        - dev-tools

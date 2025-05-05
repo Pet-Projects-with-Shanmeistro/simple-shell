@@ -1,247 +1,61 @@
 ---
-- name: Install System Administration Tools
-  hosts: localhost
+- name: Install core system utilities
   become: yes
-  tasks:
-    - name: Install htop
-      ansible.builtin.package:
-        name: htop
-        state: present
-      when: install_htop | default(false) and ansible_os_family in ['Linux', 'Darwin']
+  ansible.builtin.package:
+    name:
+      - htop
+      - tmux
+      - vim # Or consider 'neovim' here if you prefer
+      - ripgrep
+    state: present
+  register: core_utils_result
+  failed_when: core_utils_result is defined and core_utils_result.failed
 
-    - name: Install ncdu
-      ansible.builtin.package:
-        name: ncdu
-        state: present
-      when: install_ncdu | default(false) and ansible_os_family in ['Linux', 'Darwin']
+- name: Install networking tools (legacy and modern)
+  become: yes
+  ansible.builtin.package:
+    name:
+      - net-tools # Legacy tools (ifconfig, etc.)
+      - iproute2  # Newer tools (ip, ss)
+      - dnsutils
+      - nmap
+      - netcat
+      - traceroute
+      - whois
+    state: present
+  register: networking_tools_result
+  failed_when: networking_tools_result is defined and networking_tools_result.failed
 
-    - name: Install tmux
-      ansible.builtin.package:
-        name: tmux
-        state: present
-      when: install_tmux | default(false) and ansible_os_family in ['Linux', 'Darwin']
+- name: Install monitoring tools
+  become: yes
+  ansible.builtin.package:
+    name:
+      - ncdu
+      - iftop
+      - bmon
+      - nethogs
+    state: present
+  register: monitoring_tools_result
+  failed_when: monitoring_tools_result is defined and monitoring_tools_result.failed
 
-    - name: Install vim
-      ansible.builtin.package:
-        name: vim
-        state: present
-      when: install_vim | default(false) and ansible_os_family in ['Linux', 'Darwin']
+- name: Install debugging tools
+  become: yes
+  ansible.builtin.package:
+    name:
+      - strace
+      - tcpdump
+      - gdb
+    state: present
+  register: debugging_tools_result
+  failed_when: debugging_tools_result is defined and debugging_tools_result.failed
 
-    - name: Install neovim
-      ansible.builtin.package:
-        name: neovim
-        state: present
-      when: install_neovim | default(false) and ansible_os_family in ['Linux', 'Darwin']
-
-    - name: Install jq
-      ansible.builtin.package:
-        name: jq
-        state: present
-      when: install_jq | default(false) and ansible_os_family in ['Linux', 'Darwin']
-
-    - name: Install tree
-      ansible.builtin.package:
-        name: tree
-        state: present
-      when: install_tree | default(false) and ansible_os_family in ['Linux', 'Darwin']
-
-    - name: Install net-tools (Linux)
-      ansible.builtin.package:
-        name: net-tools
-        state: present
-      when: install_net_tools | default(false) and ansible_os_family == 'Linux'
-
-    - name: Install ifconfig (macOS - part of network-utils)
-      ansible.builtin.package:
-        name: network-utils # Contains ifconfig
-        state: present
-      when: install_net_tools | default(false) and ansible_os_family == 'Darwin'
-
-    - name: Install dnsutils
-      ansible.builtin.package:
-        name: dnsutils
-        state: present
-      when: install_dnsutils | default(false) and ansible_os_family in ['Linux', 'Darwin']
-
-    - name: Install ripgrep
-      ansible.builtin.package:
-        name: ripgrep
-        state: present
-      when: install_ripgrep | default(false) and ansible_os_family in ['Linux', 'Darwin']
-
-# --- Optional Network Tools for Cybersecurity ---
-    - name: Install iproute2
-      ansible.builtin.package:
-        name: iproute2
-        state: present
-      when: install_iproute2 | default(false) and ansible_os_family in ['Linux', 'Darwin']  
-
-    - name: Install nmap
-      ansible.builtin.package:
-        name: nmap
-        state: present
-      when: install_nmap | default(false) and ansible_os_family in ['Linux', 'Darwin']
-
-    - name: Install netcat (ncat for more features)
-      ansible.builtin.package:
-        name: ncat
-        state: present
-      when: install_ncat | default(false) and ansible_os_family in ['Linux', 'Darwin']
-
-    - name: Install tcpdump
-      ansible.builtin.package:
-        name: tcpdump
-        state: present
-      when: install_tcpdump | default(false) and ansible_os_family in ['Linux', 'Darwin']
-
-    - name: Install whois
-      ansible.builtin.package:
-        name: whois
-        state: present
-      when: install_whois | default(false) and ansible_os_family in ['Linux', 'Darwin']
-
-    - name: Install traceroute
-      ansible.builtin.package:
-        name: traceroute
-        state: present
-      when: install_traceroute | default(false) and ansible_os_family in ['Linux', 'Darwin']
-
-    # --- Optional Cloud CLIs (as discussed earlier) ---
-    - name: Install AWS CLI (via pip)
-      ansible.builtin.pip:
-        name: awscli
-        state: present
-      when: install_awscli | default(false) and ansible_os_family in ['Linux', 'Darwin']
-
-    - name: Install Google Cloud CLI (Debian/Ubuntu - requires adding repo)
-      block:
-        - name: Add Google Cloud CLI repository key
-          ansible.builtin.apt_key:
-            url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
-            state: present
-        - name: Add Google Cloud CLI repository
-          ansible.builtin.apt_repository:
-            repo: deb [signed-by=/etc/apt/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud main
-            state: present
-            filename: google-cloud-cli
-        - name: Install Google Cloud CLI
-          ansible.builtin.package:
-            name: google-cloud-cli
-            state: present
-      become: true
-      when: install_gcloud | default(false) and ansible_os_family == 'Debian'
-
-    - name: Install Google Cloud CLI (RedHat/CentOS/Fedora - requires adding repo)
-      block:
-        - name: Add Google Cloud CLI repository
-          ansible.builtin.yum_repository:
-            name: google-cloud-cli
-            description: Google Cloud CLI
-            baseurl: https://packages.cloud.google.com/yum/repos/cloud-sdk-el{{ ansible_distribution_major_version }}-x86_64
-            gpgcheck: yes
-            repo_gpgcheck: yes
-            gpgkey: https://packages.cloud.google.com/yum/doc/rpm-gpg-key-cloud-sdk.key
-            enabled: yes
-        - name: Install Google Cloud CLI
-          ansible.builtin.package:
-            name: google-cloud-cli
-            state: present
-      become: true
-      when: install_gcloud | default(false) and ansible_os_family in ['RedHat', 'CentOS', 'Fedora']
-
-    - name: Install Azure CLI (via pip)
-      ansible.builtin.pip:
-        name: azure-cli
-        state: present
-      when: install_azurecli | default(false) and ansible_os_family in ['Linux', 'Darwin']
-
-    # --- Optional Containerization Tools ---
-    - name: Install Docker (using Ansible Docker module - requires docker package to be available)
-      community.docker.docker_package:
-        state: present
-      when: install_docker | default(false) and ansible_os_family in ['Linux', 'Darwin']
-
-    - name: Install kubectl (Debian/Ubuntu - requires adding repo and key)
-      block:
-        - name: Add Kubernetes apt-key
-          ansible.builtin.apt_key:
-            url: https://pkgs.k8s.io/debian/doc/apt-key.gpg
-            state: present
-        - name: Add Kubernetes apt repository
-          ansible.builtin.apt_repository:
-            repo: deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/debian/ stable main
-            state: present
-            filename: kubernetes
-            gpg_file: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-        - name: Install kubectl
-          ansible.builtin.package:
-            name: kubectl
-            state: present
-      become: true
-      when: install_kubectl | default(false) and ansible_os_family == 'Debian'
-
-    - name: Install kubectl (RedHat/CentOS/Fedora - requires adding repo)
-      block:
-        - name: Add Kubernetes yum repository
-          ansible.builtin.yum_repository:
-            name: kubernetes
-            description: Kubernetes YUM repository
-            baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
-            enabled: yes
-            gpgcheck: yes
-            repo_gpgcheck: yes
-            gpgkey: https://packages.cloud.google.com/yum/doc/rpm-gpg-key-kubernetes.key
-        - name: Install kubectl
-          ansible.builtin.package:
-            name: kubectl
-            state: present
-      become: true
-      when: install_kubectl | default(false) and ansible_os_family in ['RedHat', 'CentOS', 'Fedora']
-
-    - name: Install kubectl (macOS via Homebrew)
-      community.general.homebrew_cask:
-        name: kubernetes-cli
-        state: present
-      when: install_kubectl | default(false) and ansible_os_family == 'Darwin'
-
-    - name: Install helm (Linux/macOS - using script for simplicity)
-      ansible.builtin.shell: |
-        curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-        chmod 700 get_helm.sh
-        ./get_helm.sh -b /usr/local/bin
-        rm get_helm.sh
-      args:
-        creates: /usr/local/bin/helm
-      become: true
-      when: install_helm | default(false) and ansible_os_family in ['Linux', 'Darwin']
-
-    - name: Install terraform (Linux/macOS - using direct download and install)
-      block:
-        - name: Download Terraform
-          ansible.builtin.get_url:
-            url: "https://releases.hashicorp.com/terraform/{{ terraform_version }}/terraform_{{ terraform_version }}_{{ ansible_system }}_{{ ansible_architecture }}.zip"
-            dest: /tmp/terraform.zip
-            mode: '0644'
-        - name: Create Terraform bin directory if it doesn't exist
-          ansible.builtin.file:
-            path: /usr/local/bin
-            state: directory
-            mode: '0755'
-            become: true
-        - name: Unzip Terraform
-          ansible.builtin.unarchive:
-            src: /tmp/terraform.zip
-            dest: /usr/local/bin
-            remote_src: yes
-            creates: /usr/local/bin/terraform
-            owner: root
-            group: root
-            mode: '0755'
-        - name: Remove Terraform zip file
-          ansible.builtin.file:
-            path: /tmp/terraform.zip
-            state: absent
-      vars:
-        terraform_version: "1.7.5" # You might want to make this a variable in group_vars
-      become: true
-      when: install_terraform | default(false) and ansible_os_family in ['Linux', 'Darwin']
+- name: Configure tmux
+  become: yes
+  ansible.builtin.copy:
+    src: tmux.conf
+    dest: "{{ user_home }}/.tmux.conf"
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_gid }}"
+    mode: '0644'
+  register: tmux_config_result
+  failed_when: tmux_config_result is defined and tmux_config_result.failed

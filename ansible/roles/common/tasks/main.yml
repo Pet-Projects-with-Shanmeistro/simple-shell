@@ -1,49 +1,39 @@
 ---
-- name: Common Configurations
-  hosts: localhost
+- name: Ensure basic utilities are installed
   become: yes
-  tasks:
-    - name: Ensure essential packages are installed
-      ansible.builtin.package:
-        name:
-          - curl
-          - wget
-          - unzip
-          - tar
-          - git
-        state: present
-      become: true
-      when: ansible_os_family in ['Linux', 'Darwin']
+  ansible.builtin.package:
+    name:
+      - git
+      - curl
+      - wget
+    state: present
 
-    - name: Ensure basic directories exist
-      ansible.builtin.file:
-        path: "{{ item }}"
-        state: directory
-        mode: '0755'
-      loop:
-        - "{{ user_home }}/.cache"
-        - "{{ user_home }}/.local/share"
-      when: ansible_os_family in ['Linux', 'Darwin']
+- name: Ensure .config directory exists
+  ansible.builtin.file:
+    path: "{{ user_home }}/.config"
+    state: directory
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_gid }}"
+    mode: '0755'
 
-    - name: Update package cache (Debian/Ubuntu)
-      ansible.builtin.apt:
-        update_cache: yes
-      become: true
-      when: ansible_os_family == 'Debian'
+- name: Ensure .local/bin directory exists
+  ansible.builtin.file:
+    path: "{{ user_home }}/.local/bin"
+    state: directory
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_gid }}"
+    mode: '0755'
 
-    - name: Update package cache (RedHat/CentOS/Fedora)
-      ansible.builtin.yum:
-        update_cache: yes
-      become: true
-      when: ansible_os_family in ['RedHat', 'CentOS', 'Fedora']
+- name: Set Git user name (optional)
+  ansible.builtin.git_config:
+    name: user.name
+    scope: global
+    value: "{{ git_user_name | default('') }}"
+  when: git_user_name is defined
 
-    - name: Update package cache (Arch Linux)
-      ansible.builtin.pacman:
-        sync: yes
-      become: true
-      when: ansible_os_family == 'Archlinux'
-
-    - name: Update package cache (macOS via Homebrew)
-      community.general.homebrew:
-        update_homebrew: yes
-      when: ansible_os_family == 'Darwin'
+- name: Set Git user email (optional)
+  ansible.builtin.git_config:
+    name: user.email
+    scope: global
+    value: "{{ git_user_email | default('') }}"
+  when: git_user_email is defined

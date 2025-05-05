@@ -3,96 +3,66 @@
 # These can be overridden by the install_custom_shell.sh script
 # or by passing --extra-vars="key=value" to ansible-playbook.
 
-# --- Shell & Prompt Selection (Defaults - Script usually overrides) ---
-preferred_shell: "/bin/bash"       # Default shell if script isn't used (/bin/bash, /usr/bin/zsh)
-bash_prompt_preference: "starship" # Default Bash prompt (starship, none)
-zsh_prompt_preference: "none"       # Default Zsh prompt (p10k, starship, none)
+# --- Shell & Prompt Selection (Set by script) ---
+preferred_shell: ""
+prompt_framework: ""
 
-# --- Optional Tool Installation ---
-# Set these to true to install the corresponding tools via the respective roles.
-# Sysadmin Tools Role
-# Set the following to true to install the corresponding tools.
+# --- Default Tool Installation ---
+# These tools will be installed by default.
+# Optional/additional tools will be managed by a separate script.
 
-# Debugging
-install_htop: true
-install_strace: false # Trace system calls and signals
-install_tcpdump: true # Packet analyzer
-install_wireshark: false # Network protocol analyzer (GUI - might need special handling)
-install_gdb: false # GNU Debugger
-install_tmux: true
-install_vim: true # Keep vim even if neovim is installed
-install_neovim: true # Example: Install Neovim
+# --- Core Tools ---
+install_zsh: false # Install Zsh if not present (set by script)
 
-# Monitoring
-install_ncdu: true # Disk usage analyzer
-install_iftop: true # Network bandwidth monitoring tool
-install_bmon: true # Bandwidth monitor and rate estimator
-install_nethogs: true # Network bandwidth per process
-
-# Network
-install_net_tools: true # Basic networking utilities (ifconfig, etc.)
-install_dnsutils: true # DNS lookup utilities (dig, nslookup)
-install_nmap: true # Network exploration and security scanner
-install_netcat: true # Networking utility (nc)
-install_traceroute: true # Trace network path
-install_whois: true # Domain/IP lookup
-install_sshuttle: false # Transparent proxy over SSH
-install_sshpass: false # Non-interactive SSH auth
-install_sshfs: false # Mount remote filesystems over SSH
-
-# Text Utilities
-install_bat: false # Cat clone with syntax highlighting
-install_lynx: false # Text-based web browser
-install_jq: true # JSON processor
-install_tree: true # Display directory structure
-
-# Security
-install_ripgrep: true # Faster grep
-install_burp_suite: false # Web vulnerability scanner (GUI - might need manual setup)
-install_sqlmap: false # SQL injection tool
-install_msfconsole: false # Metasploit Framework Console
-install_feroxbuster: false # Directory brute-forcer
-install_httprobe: false # HTTP probing
-install_subjack: false # Subdomain takeover
-install_gau: false # Get all URLs
-install_gobuster: false # Directory/file brute-forcer
-install_whatweb: false # Web scanner
-install_nikto: false # Web server scanner
-install_dirsearch: false # Web path scanner
-
+# --- DevOps Essentials ---
 # Containerization
-install_docker: false
-install_kubectl: false
-install_helm: false
+install_docker: true
+install_kubectl: true
+install_helm: true
+install_docker_compose: true
 
 # Infrastructure as Code
-install_terraform: false
-
-# Cloud CLIs
+install_terraform: true
 install_awscli: false
 install_gcloud: false
 install_azurecli: false
 
-# Dev Tools Role
-install_nvm: true # Node Version Manager
-install_pyenv: true # Python Version Manager
-install_conda: false # Conda environment manager
-install_httpie: false # User-friendly curl alternative
+# --- Full Stack & AI/ML Essentials ---
+# Python
+install_python: true
+python_versions:
+  - "3.8"
+  - "3.11"
+
+# Node.js
+install_nvm: true
+
+# Package Managers
+install_pip: true
+install_npm: true
+
+# --- Common Utilities ---
+install_git: true
+install_curl: true
+install_wget: true
+install_jq: true
+install_tmux: true
+install_vim: true # Keep vim as a base editor
+install_ripgrep: true # Faster grep
 
 # --- Configuration Paths ---
 # Assumes user running ansible is the target user
 user_home: "{{ ansible_user_dir }}"
-dotfiles_repo_local_path: "" # Set this if playbook runs outside the repo clone
 config_dir: "{{ user_home }}/.config"
 local_bin_dir: "{{ user_home }}/.local/bin"
 
-# Starship configuration file path
+# Starship configuration file path (will be created if Starship is chosen later)
 starship_config_path: "{{ config_dir }}/starship.toml"
 
-# P10k configuration file path
+# P10k configuration file path (will be created if P10k is chosen later)
 p10k_config_path: "{{ user_home }}/.p10k.zsh"
 
-# Oh My Zsh path
+# Oh My Zsh path (will be installed if Zsh and P10k are chosen later)
 omz_path: "{{ user_home }}/.oh-my-zsh"
 omz_custom_path: "{{ omz_path }}/custom"
 omz_themes_path: "{{ omz_custom_path }}/themes"

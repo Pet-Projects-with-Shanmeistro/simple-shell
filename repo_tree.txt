@@ -1,25 +1,22 @@
 my-awesome-shell-setup/
 ├── ansible/
-│   ├── custome_dev_env.yml
-│   ├── roles/
-│   │   ├── common/tasks/main.yml
-│   │   ├── shell/tasks/main.yml
-│   │   ├── sysadmin-tools/tasks/main.yml
-│   │   └── dev-tools/tasks/main.yml
 │   ├── inventory/
-│   │   └── localhost # Example inventory
-│   ├── group_vars/
-│   │   └── all.yml # Default variables
-│   └── templates/
-│       ├── bashrc.j2
-│       ├── starship.toml.j2
-│       └── zshrc.j2
-├── dotfiles/
-│   ├── .zshrc.template
-│   ├── .bashrc.template
-│   ├── starship.toml
-│   └── .tmux.conf
-├── scripts/
-│   └── install_custom_shell.sh # Optional simple bootstrap script?
-├── This Repo Tree (not sure what extension to use)
-└── README.md # CRUCIAL: Detailed setup, customization, Ansible usage
+│   │   └── localhost
+│   ├── roles/
+│   │   ├── common/
+│   │   │   └── tasks/
+│   │   │       └── main.yml
+│   │   ├── dev-tools/
+│   │   │   └── tasks/
+│   │   │       └── main.yml
+│   │   ├── shell/
+│   │   │   └── tasks/
+│   │   │       └── main.yml
+│   │   └── sysadmin-tools/
+│   │       └── tasks/
+│   │           └── main.yml
+│   └── custom_dev_env.yml
+├── install_custom_shell.sh
+├── manage_optional_tools.sh
+├── README.md
+└── CHANGELOG.md
