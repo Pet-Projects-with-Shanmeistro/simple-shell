@@ -17,7 +17,7 @@ print_header() {
   echo -e "\n${BLUE}==>${RESET} ${CYAN}$1${RESET}"
 }
 
-command_exists () {
+command_exists() {
   command -v "$1" >/dev/null 2>&1
 }
 
@@ -26,8 +26,16 @@ install_package() {
   echo -e "${YELLOW}Attempting to install '$package'...${RESET}"
   if [[ "$(uname -s)" == "Linux" ]]; then
     if command_exists apt-get; then
-      sudo apt-get update -y
-      sudo apt-get install -y "$package"
+      if [[ "$package" == "nodejs" ]]; then
+        curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+        sudo apt-get install -y nodejs
+      elif [[ "$package" == "jupyter" ]]; then
+        sudo apt-get install -y python3-pip python3-venv
+        pip3 install jupyter
+      else
+        sudo apt-get update -y
+        sudo apt-get install -y "$package"
+      fi
     elif command_exists yum; then
       sudo yum install -y "$package"
     elif command_exists dnf; then
@@ -49,7 +57,7 @@ install_package() {
     echo -e "${RED}Error: Unsupported OS. Please install '$package' manually.${RESET}"
     return 1
   fi
-  if command_exists "$package"; then
+  if command_exists "$package" || [[ "$package" == "jupyter" && -x "$(command -v jupyter)" ]]; then
     echo -e "${GREEN}'$package' installed successfully.${RESET}"
     return 0
   else
@@ -63,13 +71,17 @@ remove_package() {
   echo -e "${YELLOW}Attempting to remove '$package'...${RESET}"
   if [[ "$(uname -s)" == "Linux" ]]; then
     if command_exists apt-get; then
-      sudo apt-get remove -y "$package"
+      if [[ "$package" == "jupyter" ]]; then
+        pip3 uninstall -y jupyter
+      else
+        sudo apt-get remove -y "$package"
+      fi
     elif command_exists yum; then
       sudo yum remove -y "$package"
     elif command_exists dnf; then
       sudo dnf remove -y "$package"
     elif command_exists pacman; then
-      sudo pacman -Rns --noconfirm "$package" # Remove with dependencies and config
+      sudo pacman -Rns --noconfirm "$package"
     else
       echo -e "${RED}Error: Unsupported package manager. Please remove '$package' manually.${RESET}"
       return 1
@@ -93,14 +105,42 @@ purge_package() {
   local package="$1"
   if [[ "$(uname -s)" == "Linux" ]] && command_exists apt-get; then
     echo -e "${YELLOW}Attempting to purge '$package' (remove with config)...${RESET}"
-    sudo apt-get purge -y "$package"
-    echo -e "${GREEN}'$package' purged.${RESET}"
+    if [[ "$package" == "jupyter" ]]; then
+      pip3 uninstall -y jupyter
+      echo -e "${GREEN}'$package' purged (pip uninstall).${RESET}"
+    else
+      sudo apt-get purge -y "$package"
+      echo -e "${GREEN}'$package' purged.${RESET}"
+    fi
     return 0
   else
     echo -e "${YELLOW}Purge not supported or not Linux (apt-get). Using regular remove for '$package'.${RESET}"
     remove_package "$package"
     return 0
   fi
+}
+
+# --- Tool Management Function ---
+manage_tool() {
+  local tool="$1"
+  local remove_only="$2" # Optional flag for tools where purge is risky
+
+  echo "What do you want to do with '$tool'?"
+  echo "  i) Install"
+  echo "  r) Remove"
+  if [[ -z "$remove_only" ]]; then
+    echo "  p) Purge (Linux apt-get only)"
+  fi
+  echo "  q) Go back"
+  read -p "Enter your choice: " action_choice
+
+  case "$action_choice" in
+    i) install_package "$tool";;
+    r) remove_package "$tool";;
+    p) if [[ -z "$remove_only" ]]; then purge_package "$tool"; else echo "Purge not available for this tool."; fi;;
+    q) return;;
+    *) echo "Invalid action.";;
+  esac
 }
 
 # --- Main Menu ---
@@ -115,6 +155,7 @@ while true; do
   echo "  6) Containerization Tools"
   echo "  7) Infrastructure as Code Tools"
   echo "  8) Cloud CLIs"
+  echo "  9) Programming Tools"
   echo "  q) Quit"
   read -p "Enter your choice: " category_choice
 
@@ -124,7 +165,7 @@ while true; do
       echo "  a) htop (Install/Remove/Purge)"
       echo "  b) strace (Install/Remove/Purge)"
       echo "  c) tcpdump (Install/Remove/Purge)"
-      echo "  d) wireshark (Install/Remove)" # Purge might remove essential GUI libs
+      echo "  d) wireshark (Install/Remove)"
       echo "  e) gdb (Install/Remove/Purge)"
       echo "  f) tmux (Install/Remove/Purge)"
       echo "  g) vim (Install/Remove/Purge)"
@@ -134,7 +175,7 @@ while true; do
         a) manage_tool "htop";;
         b) manage_tool "strace";;
         c) manage_tool "tcpdump";;
-        d) manage_tool "wireshark" "remove";; # No purge
+        d) manage_tool "wireshark" "remove";;
         e) manage_tool "gdb";;
         f) manage_tool "tmux";;
         g) manage_tool "vim";;
@@ -205,17 +246,17 @@ while true; do
       ;;
     5)
       print_header "Security Tools"
-      echo "  a) burp-suite (Install/Remove)" # GUI - manual install likely
-      echo "  b) sqlmap (Install/Remove)" # Python based
-      echo "  c) msfconsole (Install/Remove)" # Metasploit
-      echo "  d) feroxbuster (Install/Remove)" # Rust based
-      echo "  e) httprobe (Install/Remove)" # Go based
-      echo "  f) subjack (Install/Remove)" # Go based
-      echo "  g) gau (Install/Remove)" # Go based
-      echo "  h) gobuster (Install/Remove)" # Go based
-      echo "  i) whatweb (Install/Remove)" # Ruby based
-      echo "  j) nikto (Install/Remove)" # Perl based
-      echo "  k) dirsearch (Install/Remove)" # Python based
+      echo "  a) burp-suite (Install/Remove)"
+      echo "  b) sqlmap (Install/Remove)"
+      echo "  c) msfconsole (Install/Remove)"
+      echo "  d) feroxbuster (Install/Remove)"
+      echo "  e) httprobe (Install/Remove)"
+      echo "  f) subjack (Install/Remove)"
+      echo "  g) gau (Install/Remove)"
+      echo "  h) gobuster (Install/Remove)"
+      echo "  i) whatweb (Install/Remove)"
+      echo "  j) nikto (Install/Remove)"
+      echo "  k) dirsearch (Install/Remove)"
       read -p "Enter option (or q to go back): " tool_choice
       case "$tool_choice" in
         a) manage_tool "burp-suite" "remove"; echo "Note: Burp Suite might require manual installation.";;
@@ -236,8 +277,8 @@ while true; do
     6)
       print_header "Containerization Tools"
       echo "  a) docker (Install/Remove/Purge)"
-      echo "  b) kubectl (Install/Remove)" # Often installed via specific method
-      echo "  c) helm (Install/Remove)"   # Often installed via specific method
+      echo "  b) kubectl (Install/Remove)"
+      echo "  c) helm (Install/Remove)"
       read -p "Enter option (or q to go back): " tool_choice
       case "$tool_choice" in
         a) manage_tool "docker";;
@@ -259,14 +300,28 @@ while true; do
       ;;
     8)
       print_header "Cloud CLIs"
-      echo "  a) awscli (Install/Remove)" # Often installed via pip
-      echo "  b) gcloud (Install/Remove)" # Often has its own installer
-      echo "  c) azurecli (Install/Remove)" # Often installed via pip
+      echo "  a) awscli (Install/Remove)"
+      echo "  b) gcloud (Install/Remove)"
+      echo "  c) azurecli (Install/Remove)"
       read -p "Enter option (or q to go back): " tool_choice
       case "$tool_choice" in
         a) manage_tool "awscli" "remove"; echo "Note: AWS CLI might require pip uninstall.";;
         b) manage_tool "gcloud" "remove"; echo "Note: gcloud might have its own uninstaller.";;
         c) manage_tool "azurecli" "remove"; echo "Note: Azure CLI might require pip uninstall.";;
+        q) continue 2;;
+        *) echo "Invalid option.";;
+      esac
+      ;;
+    9)
+      print_header "Programming Tools"
+      echo "  a) nodejs (Install/Remove)"
+      echo "  b) python3 (Install/Remove/Purge)"
+      echo "  c) jupyter (Install/Remove/Purge)"
+      read -p "Enter option (or q to go back): " tool_choice
+      case "$tool_choice" in
+        a) manage_tool "nodejs" "remove";;
+        b) manage_tool "python3";;
+        c) manage_tool "jupyter";;
         q) continue 2;;
         *) echo "Invalid option.";;
       esac
@@ -278,26 +333,14 @@ while true; do
       echo "Invalid choice.";;
   esac
 done
-
-# --- Tool Management Function ---
-manage_tool() {
-  local tool="$1"
-  local remove_only="$2" # Optional flag for tools where purge is risky
-
-  echo "What do you want to do with '$tool'?"
-  echo "  i) Install"
-  echo "  r) Remove"
-  if [[ -z "$remove_only" ]]; then
-    echo "  p) Purge (Linux apt-get only)"
-  fi
-  echo "  q) Go back"
-  read -p "Enter your choice: " action_choice
-
-  case "$action_choice" in
-    i) install_package "$tool";;
-    r) remove_package "$tool";;
-    p) if [[ -z "$remove_only" ]]; then purge_package "$tool"; else echo "Purge not available for this tool."; fi;;
-    q) return;;
-    *) echo "Invalid action.";;
-  esac
-}
+echo -e "${GREEN}Exiting tool management.${RESET}"
+# fi
+# echo -e "${GREEN}Shell configuration completed successfully!${RESET}"
+# echo -e "${YELLOW}Please restart your terminal or source your shell configuration file to apply changes.${RESET}"
+# echo -e "${YELLOW}For Zsh users, run 'p10k configure' to set up your Powerlevel10k theme.${RESET}"
+# echo -e "${YELLOW}For Bash users, run 'starship init bash' to set up your Starship theme.${RESET}"
+# echo -e "${YELLOW}For Zsh users, run 'starship init zsh' to set up your Starship theme.${RESET}"
+# echo -e "${YELLOW}For Zsh users, run 'zsh-autosuggestions' to set up your Zsh autosuggestions.${RESET}"
+# echo -e "${YELLOW}For Zsh users, run 'zsh-syntax-highlighting' to set up your Zsh syntax highlighting.${RESET}"
+# echo -e "${YELLOW}For Zsh users, run 'zsh-completions' to set up your Zsh completions.${RESET}"
+# echo -e "${YELLOW}For Zsh users, run 'zsh-history-substring-search' to set up your Zsh history substring search.${RESET}"
