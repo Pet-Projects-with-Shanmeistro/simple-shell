@@ -5,7 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/) (optional, but good to know).
 
----
+
+## [0.2.0] - 2025-07-28
+
+### Added
+
+- Enhanced `manage_optional_tools.sh` with:
+  - Custom Docker and Terraform install/uninstall functions using official repository steps.
+  - Options to check if a tool is installed, check its version, and update it (apt-get only).
+  - Improved menu-driven interface for tool management.
+- Added helper functions for version and update checks.
+- Provided guidance and review for `.tmux.conf` to help new users, including color scheme troubleshooting and minimal config recommendations.
+
+### Changed
+
+- Refactored `manage_optional_tools.sh` to integrate advanced tool management and user feedback.
+- Updated `.tmux.conf` recommendations for better usability and default color scheme restoration.
+
+### Fixed
+
+- Addressed issues with overly bright tmux color schemes by clarifying which config lines to comment/remove for defaults.
 
 ## [0.1.0] - 2025-05-05
 

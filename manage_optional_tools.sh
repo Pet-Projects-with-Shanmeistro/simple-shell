@@ -21,6 +21,77 @@ command_exists() {
   command -v "$1" >/dev/null 2>&1
 }
 
+# --- Version and Update Helpers ---
+version_package() {
+  local package="$1"
+  if command_exists "$package"; then
+    echo -e "${YELLOW}Checking version for '$package'...${RESET}"
+    "$package" --version 2>&1 | head -n 1
+  else
+    echo -e "${RED}Error: '$package' is not installed.${RESET}"
+    return 1
+  fi
+}
+
+update_package() {
+  local package="$1"
+  if [[ "$(uname -s)" == "Linux" ]] && command_exists apt-get; then
+    echo -e "${YELLOW}Attempting to update '$package'...${RESET}"
+    sudo apt-get update
+    sudo apt-get install --only-upgrade -y "$package"
+    echo -e "${GREEN}'$package' updated.${RESET}"
+  else
+    echo -e "${RED}Error: Update not supported or not Linux (apt-get).${RESET}"
+    return 1
+  fi
+}
+
+# --- Custom Install/Remove for Docker ---
+install_docker() {
+  echo -e "${YELLOW}Installing Docker...${RESET}"
+  sudo apt-get update
+  sudo apt-get install -y ca-certificates curl
+  sudo install -m 0755 -d /etc/apt/keyrings
+  sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  sudo chmod a+r /etc/apt/keyrings/docker.asc
+  echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo \"${UBUNTU_CODENAME:-$VERSION_CODENAME}\") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  sudo apt-get update
+  sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  echo -e "${YELLOW}Testing Docker installation...${RESET}"
+  sudo docker run hello-world || echo -e "${RED}Docker test failed. Please check installation.${RESET}"
+  echo -e "${GREEN}Docker install steps completed.${RESET}"
+}
+
+remove_docker() {
+  echo -e "${YELLOW}Removing Docker...${RESET}"
+  for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove -y $pkg; done
+  sudo apt-get autoremove -y --purge
+  sudo rm -rf /var/lib/docker
+  sudo rm -rf /var/lib/containerd
+  sudo rm -f /etc/apt/sources.list.d/docker.list
+  echo -e "${GREEN}Docker removed successfully.${RESET}"
+}
+
+# --- Custom Install/Remove for Terraform ---
+install_terraform() {
+  echo -e "${YELLOW}Installing Terraform...${RESET}"
+  wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+  sudo apt update && sudo apt install -y terraform
+  echo -e "${GREEN}Terraform installed successfully.${RESET}"
+}
+
+remove_terraform() {
+  echo -e "${YELLOW}Removing Terraform...${RESET}"
+  sudo apt-get remove -y terraform
+  sudo rm -f /etc/apt/sources.list.d/hashicorp.list
+  sudo apt-get update
+  echo -e "${GREEN}Terraform removed successfully.${RESET}"
+}
+
 install_package() {
   local package="$1"
   echo -e "${YELLOW}Attempting to install '$package'...${RESET}"
@@ -131,13 +202,45 @@ manage_tool() {
   if [[ -z "$remove_only" ]]; then
     echo "  p) Purge (Linux apt-get only)"
   fi
+  echo "  c) Check if Installed"
+  echo "  v) Check Version"
+  echo "  u) Update (apt-get only)"
   echo "  q) Go back"
   read -p "Enter your choice: " action_choice
 
   case "$action_choice" in
-    i) install_package "$tool";;
-    r) remove_package "$tool";;
+    i)
+      if [[ "$tool" == "docker" ]]; then
+        install_docker
+      elif [[ "$tool" == "terraform" ]]; then
+        install_terraform
+      else
+        install_package "$tool"
+      fi
+      ;;
+    r)
+      if [[ "$tool" == "docker" ]]; then
+        remove_docker
+      elif [[ "$tool" == "terraform" ]]; then
+        remove_terraform
+      else
+        remove_package "$tool"
+      fi
+      ;;
     p) if [[ -z "$remove_only" ]]; then purge_package "$tool"; else echo "Purge not available for this tool."; fi;;
+    c)
+      if command_exists "$tool"; then
+        echo -e "${GREEN}$tool is installed.${RESET}"
+      else
+        echo -e "${RED}$tool is not installed.${RESET}"
+      fi
+      ;;
+    v)
+      version_package "$tool"
+      ;;
+    u)
+      update_package "$tool"
+      ;;
     q) return;;
     *) echo "Invalid action.";;
   esac
