@@ -1,0 +1,7 @@
+{
+    "ansible.python.activationScript": "/home/shan/repos/personal/github/simple-shell/.venv/bin/activate",
+    "ansible.python.interpreterPath": "/home/shan/repos/personal/github/simple-shell/.venv/bin/python",
+    "ansible.validation.enabled": true,
+    "ansible.validation.lint.enabled": true,
+    "ansible.validation.lint.path": "/home/shan/repos/personal/github/simple-shell/.venv/bin/ansible-lint"
+}

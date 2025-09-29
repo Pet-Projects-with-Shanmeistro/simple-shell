@@ -1,8 +1,8 @@
 ---
-- hosts: localhost
+- name: Setup local dev environment
+  hosts: localhost
   connection: local
-  become: yes # Generally needed for most tasks
-
+  become: true # Generally needed for most tasks
   vars:
     user_home: "{{ ansible_user_dir }}"
     config_dir: "{{ user_home }}/.config"

@@ -1,6 +1,6 @@
 ---
 - name: Install core system utilities
-  become: yes
+  become: true
   ansible.builtin.package:
     name:
       - htop
@@ -12,7 +12,7 @@
   failed_when: core_utils_result is defined and core_utils_result.failed
 
 - name: Install networking tools (legacy and modern)
-  become: yes
+  become: true
   ansible.builtin.package:
     name:
       - net-tools # Legacy tools (ifconfig, etc.)
@@ -27,7 +27,7 @@
   failed_when: networking_tools_result is defined and networking_tools_result.failed
 
 - name: Install monitoring tools
-  become: yes
+  become: true
   ansible.builtin.package:
     name:
       - ncdu
@@ -39,7 +39,7 @@
   failed_when: monitoring_tools_result is defined and monitoring_tools_result.failed
 
 - name: Install debugging tools
-  become: yes
+  become: true
   ansible.builtin.package:
     name:
       - strace
@@ -50,7 +50,7 @@
   failed_when: debugging_tools_result is defined and debugging_tools_result.failed
 
 - name: Configure tmux
-  become: yes
+  become: true
   ansible.builtin.copy:
     src: tmux.conf
     dest: "{{ user_home }}/.tmux.conf"

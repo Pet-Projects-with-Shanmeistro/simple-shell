@@ -1,23 +1,30 @@
 ---
 - name: Install Zsh if preferred and not already installed
-  become: yes
+  become: true
   ansible.builtin.package:
     name: zsh
     state: present
-  register: zsh_install_result
+  register: shell_zsh_install_result
   when: preferred_shell == "/usr/bin/zsh" and not ansible_check_mode
-  failed_when: zsh_install_result is defined and zsh_install_result.failed
+  failed_when: shell_zsh_install_result is defined and shell_zsh_install_result.failed
   notify: Restart Shell Service # If such a service exists - might not be relevant
 
+- name: Download Starship install script
+  become: true
+  ansible.builtin.get_url:
+    url: https://starship.rs/install.sh
+    dest: /tmp/install_starship.sh
+    mode: '0755'
+  when: prompt_framework == "starship"
+
 - name: Install Starship prompt
-  become: yes
-  ansible.builtin.shell: curl -sS https://starship.rs/install.sh | sh -s -- -y
+  become: true
+  ansible.builtin.command: sh /tmp/install_starship.sh -y
   args:
     creates: "{{ user_home }}/.local/bin/starship"
-  register: starship_install_result
+  register: shell_starship_install_result
   when: prompt_framework == "starship"
-  failed_when: starship_install_result is defined and starship_install_result.rc != 0
-
+  failed_when: shell_starship_install_result is defined and shell_starship_install_result.rc != 0
 - name: Ensure Starship configuration directory exists
   ansible.builtin.file:
     path: "{{ config_dir }}"
@@ -27,34 +34,54 @@
     mode: '0755'
   when: prompt_framework == "starship"
 
+- name: Check if Starship configuration file exists
+  ansible.builtin.stat:
+    path: "{{ starship_config_path }}"
+  register: shell_starship_config_stat
+  when: prompt_framework == "starship"
+
 - name: Create Starship configuration file (if not exists)
   ansible.builtin.file:
     path: "{{ starship_config_path }}"
-    state: touch
+    state: file
     owner: "{{ ansible_user_id }}"
     group: "{{ ansible_user_gid }}"
     mode: '0644'
-  when: prompt_framework == "starship" and not (lookup('file', starship_config_path) | length > 0)
+  when: prompt_framework == "starship" and not (shell_starship_config_stat is defined and shell_starship_config_stat.stat.exists)
 
 - name: Install Oh My Zsh (for Powerlevel10k)
-  become: yes
+  become: true
   ansible.builtin.git:
     repo: https://github.com/ohmyzsh/ohmyzsh.git
     dest: "{{ omz_path }}"
     depth: 1
-  register: omz_install_result
-  when: prompt_framework == "p10k" and not (lookup('file', omz_path) | length > 0)
-  failed_when: omz_install_result is defined and omz_install_result.failed
+    update: no
+  register: shell_omz_install_result
+  when: prompt_framework == "p10k" and (shell_omz_path_stat is not defined or not shell_omz_path_stat.stat.exists)
+  failed_when: shell_omz_install_result is defined and shell_omz_install_result.failed
+    dest: "{{ omz_path }}"
+    depth: 1
+    update: no
+  register: shell_omz_install_result
+  when: prompt_framework == "p10k" and not shell_omz_path_stat.stat.exists
+  failed_when: shell_omz_install_result is defined and shell_omz_install_result.failed
 
 - name: Install Powerlevel10k theme (via Oh My Zsh custom themes)
-  become: yes
+  become: true
   ansible.builtin.git:
     repo: https://github.com/romkatv/powerlevel10k.git
     dest: "{{ p10k_theme_path_omz }}"
     depth: 1
-  register: p10k_install_result
-  when: prompt_framework == "p10k" and not (lookup('file', p10k_theme_path_omz) | length > 0) and (lookup('file', omz_path) | length > 0)
-  failed_when: p10k_install_result is defined and p10k_install_result.failed
+    update: no
+  register: shell_p10k_install_result
+  when: prompt_framework == "p10k" and (shell_p10k_path_stat is not defined or not shell_p10k_path_stat.stat.exists) and (shell_omz_path_stat is defined and shell_omz_path_stat.stat.exists)
+  failed_when: shell_p10k_install_result is defined and shell_p10k_install_result.failed
+    dest: "{{ p10k_theme_path_omz }}"
+    depth: 1
+    update: no
+  register: shell_p10k_install_result
+  when: prompt_framework == "p10k" and not shell_p10k_path_stat.stat.exists and shell_omz_path_stat.stat.exists
+  failed_when: shell_p10k_install_result is defined and shell_p10k_install_result.failed
 
 - name: Set Zsh theme to Powerlevel10k in .zshrc
   ansible.builtin.lineinfile:
@@ -62,9 +89,17 @@
     regexp: '^ZSH_THEME=".*"'
     line: 'ZSH_THEME="powerlevel10k/powerlevel10k"'
     create: true
-  register: zsh_theme_set_result
+  register: shell_zsh_theme_set_result
+  # This task is idempotent but may show 'changed' on first run
   when: preferred_shell == "/usr/bin/zsh" and prompt_framework == "p10k"
-  failed_when: zsh_theme_set_result is defined and zsh_theme_set_result.failed
+
+- name: Ensure .zshrc ownership and permissions
+  ansible.builtin.file:
+- name: Check if Powerlevel10k config exists
+  ansible.builtin.stat:
+    path: "{{ user_home }}/.p10k.zsh"
+  register: shell_p10k_config_stat
+  when: preferred_shell == "/usr/bin/zsh" and prompt_framework == "p10k"
 
 - name: Configure Powerlevel10k zshrc (basic - user will likely customize)
   ansible.builtin.copy:
@@ -75,34 +110,40 @@
     owner: "{{ ansible_user_id }}"
     group: "{{ ansible_user_gid }}"
     mode: '0644'
-  register: p10k_config_result
-  when: preferred_shell == "/usr/bin/zsh" and prompt_framework == "p10k" and not (lookup('file', "{{ user_home }}/.p10k.zsh") | length > 0)
-  failed_when: p10k_config_result is defined and p10k_config_result.failed
-
+  register: shell_p10k_config_result
+  when: preferred_shell == "/usr/bin/zsh" and prompt_framework == "p10k" and not (shell_p10k_config_stat is defined and shell_p10k_config_stat.stat.exists)
+  failed_when: shell_p10k_config_result is defined and shell_p10k_config_result.failed
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_gid }}"
+    mode: '0644'
+  register: shell_p10k_config_result
+  when: preferred_shell == "/usr/bin/zsh" and prompt_framework == "p10k" and not (lookup('file', user_home ~ '/.p10k.zsh') | length > 0)
+  failed_when: shell_p10k_config_result is defined and shell_p10k_config_result.failed
 - name: Ensure Starship initialization is in shell configuration
+  when: prompt_framework == "starship"
   block:
     - name: Ensure Starship initialization in .bashrc
       ansible.builtin.lineinfile:
         path: "{{ user_home }}/.bashrc"
-        line: eval "$(starship init bash)"
+        line: 'eval "$(starship init bash)"'
         create: true
-      register: bash_starship_init_result
-      failed_when: bash_starship_init_result is defined and bash_starship_init_result.failed
+      register: shell_bash_starship_init_result
+      failed_when: shell_bash_starship_init_result is defined and shell_bash_starship_init_result.failed
+
     - name: Ensure Starship initialization in .zshrc
       ansible.builtin.lineinfile:
         path: "{{ user_home }}/.zshrc"
-        line: eval "$(starship init zsh)"
+        line: 'eval "$(starship init zsh)"'
         create: true
-      register: zsh_starship_init_result
-      failed_when: zsh_starship_init_result is defined and zsh_starship_init_result.failed
+      register: shell_zsh_starship_init_result
+      failed_when: shell_zsh_starship_init_result is defined and shell_zsh_starship_init_result.failed
       when: preferred_shell == "/usr/bin/zsh"
-  when: prompt_framework == "starship"
 
 - name: Set preferred shell for user
-  become: yes
+  become: true
   ansible.builtin.user:
     name: "{{ ansible_user }}"
     shell: "{{ preferred_shell }}"
-  register: set_shell_result
+  register: shell_set_shell_result
   when: preferred_shell != ansible_user_shell and not ansible_check_mode
-  failed_when: set_shell_result is defined and set_shell_result.failed
+  failed_when: shell_set_shell_result is defined and shell_set_shell_result.failed

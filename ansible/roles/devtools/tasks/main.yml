@@ -1,108 +1,30 @@
 ---
 - name: Install Python and pip (system level)
-  become: yes
+  become: true
   ansible.builtin.package:
     name:
       - python3
       - python3-pip
     state: present
-  register: python_system_install_result
-  failed_when: python_system_install_result is defined and python_system_install_result.failed
+  register: devtools_python_system_install_result
+  failed_when: devtools_python_system_install_result.failed | default(false)
 
 - name: Install uv
-  become: yes
+  become: true
   ansible.builtin.pip:
     name: uv
     executable: pip3
     state: present
-  register: uv_install_result
-  failed_when: uv_install_result is defined and uv_install_result.failed
+  register: devtools_uv_install_result
+  failed_when: devtools_uv_install_result.failed | default(false)
 
 - name: Install ruff via uv
-  become: yes
-  ansible.builtin.pip:
-    name: ruff
-    executable: pip3
-    state: present
-  register: ruff_install_result
-  failed_when: ruff_install_result is defined and ruff_install_result.failed
-
-- name: Install taplo via uv
-  become: yes
-  ansible.builtin.pip:
-    name: taplo
-    executable: pip3
-    state: present
-  register: taplo_install_result
-  failed_when: taplo_install_result is defined and taplo_install_result.failed
-
-- name: Install pyenv
-  become: yes
-  ansible.builtin.git:
-    repo: https://github.com/pyenv/pyenv.git
-    dest: "{{ user_home }}/.pyenv"
-    depth: 1
-  register: pyenv_install_result
-  failed_when: pyenv_install_result is defined and pyenv_install_result.failed
-
-- name: Add pyenv to shell configuration
-  block:
-    - name: Add pyenv init to .bashrc
-      ansible.builtin.lineinfile:
-        path: "{{ user_home }}/.bashrc"
-        line: |
-          export PYENV_ROOT="$HOME/.pyenv"
-          command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-          eval "$(pyenv init -)"
-        create: true
-      register: bash_pyenv_init_result
-      failed_when: bash_pyenv_init_result is defined and bash_pyenv_init_result.failed
-    - name: Add pyenv init to .zshrc
-      ansible.builtin.lineinfile:
-        path: "{{ user_home }}/.zshrc"
-        line: |
-          export PYENV_ROOT="$HOME/.pyenv"
-          command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-          eval "$(pyenv init -)"
-        create: true
-      register: zsh_pyenv_init_result
-      failed_when: zsh_pyenv_init_result is defined and zsh_pyenv_init_result.failed
-  when: preferred_shell in ["/bin/bash", "/usr/bin/zsh"]
-
-- name: Install specified Python versions via pyenv
-  become: yes
+  become: true
   ansible.builtin.command:
-    cmd: source ~/.pyenv/bin/pyenv.sh && pyenv install {{ item }}
-    creates: "{{ user_home }}/.pyenv/versions/{{ item }}"
-  loop: "{{ python_versions | default([]) }}"
-  register: pyenv_python_install_result
-  failed_when: pyenv_python_install_result is defined and pyenv_python_install_result.rc != 0
-
-- name: Set global Python version to system (optional - can be managed per project)
-  become: yes
-  ansible.builtin.command:
-    cmd: source ~/.pyenv/bin/pyenv.sh && pyenv global system
-  when: python_versions | default([]) | length == 0 # Only set if no specific versions requested
-
-- name: Install Node.js via NVM
-  become: yes
-  ansible.builtin.shell:
-    cmd: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-    creates: "{{ user_home }}/.nvm/nvm.sh"
-  register: nvm_install_result
-  failed_when: nvm_install_result is defined and nvm_install_result.rc != 0
-
-- name: Ensure Node.js is installed
-  become: yes
-  ansible.builtin.shell:
-    cmd: source ~/.nvm/nvm.sh && nvm install --lts
-    creates: "{{ user_home }}/.nvm/versions/node/v20.13.0/bin/node"
-  register: node_install_result
-  failed_when: node_install_result is defined and node_install_result.rc != 0
-
-- name: Install npm globally
-  become: yes
-  ansible.builtin.shell:
-    cmd: source ~/.nvm/nvm.sh && nvm use --lts && npm install -g npm
-  register: npm_install_result
-  failed_when: npm_install_result is defined and npm_install_result.rc != 0
+    cmd: uv tool install ruff
+  register: devtools_ruff_install_result
+  failed_when: devtools_ruff_install_result.rc != 0
+  changed_when: devtools_ruff_install_result.rc == 0
+  when:
+    - devtools_uv_install_result is succeeded
+    - devtools_python_system_install_result is succeeded
