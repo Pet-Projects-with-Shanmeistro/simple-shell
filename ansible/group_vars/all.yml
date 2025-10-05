@@ -50,6 +50,22 @@ install_tmux: true
 install_vim: true # Keep vim as a base editor
 install_ripgrep: true # Faster grep
 
+# Nerd Fonts Configuration
+nerd_fonts_to_install:
+  - CascadiaCode
+  - FiraCode
+  - JetBrainsMono
+  # - Hack
+  # - SourceCodePro
+  # - UbuntuMono
+
+# Set to true to install all available fonts
+install_all_fonts: false
+
+# Font management options
+font_backup_enabled: true
+font_cache_refresh: true
+
 # --- Configuration Paths ---
 # Assumes user running ansible is the target user
 user_home: "{{ ansible_user_dir }}"

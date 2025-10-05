@@ -5,6 +5,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/) (optional, but good to know).
 
+## [0.2.0] - 2025-10-05
+
+### Added
+
+- **Comprehensive Nerd Fonts Management System**:
+  - New standalone `manage_fonts.sh` script with full cross-platform support (Linux, macOS, Windows, WSL)
+  - Interactive and command-line interfaces for font installation/uninstallation
+  - Support for multiple font selection and bulk operations
+  - Automatic font cache refresh and backup functionality
+  - WSL integration for dual Linux/Windows font installation
+  - Ansible integration with proper JSON output mode
+
+- **Enhanced Font Collection**:
+  - Added JetBrains Mono, Hack, Source Code Pro, Ubuntu Mono, DejaVu Sans Mono, and Inconsolata Nerd Fonts
+  - Organized font variants (Regular, Mono, Proportional) with clear labeling
+  - Font recommendations optimized for Powerlevel10k and Starship configurations
+
+- **Improved Shell Installation Experience**:
+  - Enhanced font installation option as second menu item in main installer
+  - Better font family selection with descriptions and installation status
+  - Post-installation guidance with terminal configuration instructions
+  - Cross-platform font directory detection and management
+
+- **Advanced Font Management Features**:
+  - Font backup system with timestamp-based versioning
+  - Safe uninstallation with confirmation prompts
+  - Font status reporting and system information display
+  - Comprehensive logging for troubleshooting
+
+### Changed
+
+- **Enhanced `install_custom_shell.sh`**:
+  - Restructured main menu to prominently feature font installation
+  - Improved font selection UI with better status indicators
+  - Added support for multiple font installation modes
+  - Better error handling and user feedback
+
+- **Ansible Integration**:
+  - Added dedicated font management role with configurable font lists
+  - Support for selective font installation via group variables
+  - Proper task tagging for font-specific operations
+
+### Technical Improvements
+
+- Cross-platform font directory management
+- Improved detection of WSL environments
+- Better font cache management across different operating systems
+- Enhanced logging and debugging capabilities
+- Modular design allowing standalone or integrated usage
 
 ## [0.1.1] - 2025-07-28
 

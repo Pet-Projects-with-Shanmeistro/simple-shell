@@ -124,6 +124,20 @@ if [[ "$PREFERRED_SHELL" == "/usr/bin/zsh" ]]; then
   fi
 fi
 
+# Replace the font installation section in install_custom_shell.sh with:
+
+# Install nerd fonts using dedicated script
+install_nerd_fonts() {
+    print_info "Launching font management..."
+    
+    if [[ -f "./manage_fonts.sh" ]]; then
+        chmod +x "./manage_fonts.sh"
+        ./manage_fonts.sh
+    else
+        print_error "Font management script not found. Please ensure manage_fonts.sh is in the same directory."
+    fi
+}
+
 # --- Construct Ansible Command ---
 print_step "Running Ansible Playbook..."
 
