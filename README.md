@@ -200,12 +200,11 @@ The `manage_optional_tools.sh` script provides an interface for removing some of
 
 Beyond the initial setup and optional tools management, you can further customize your environment by:
 
-**Font Management:** Use the `manage_fonts.sh` script to add or remove font families as needed.
-**Prompt Presets:** Explore the starship and p10k directories for ready-to-use prompt configurations.
-**Modifying Role Tasks:** Edit the task files within the roles directories to change installation procedures or add new tools.
-**Creating New Roles:** Organize more complex customizations into new roles and include them in the `custom_dev_env.yml` playbook.
-**Adding Fonts:** Download additional Nerd Fonts from the official repository and add them to the nerd_fonts directory.
-
+- **Font Management:** Use the `manage_fonts.sh` script to add or remove font families as needed.
+- **Prompt Presets:** Explore the starship and p10k directories for ready-to-use prompt configurations.
+- **Modifying Role Tasks:** Edit the task files within the roles directories to change installation procedures or add new tools.
+- **Creating New Roles:** Organize more complex customizations into new roles and include them in the `custom_dev_env.yml` playbook.
+- **Adding Fonts:** Download additional Nerd Fonts from the official repository and add them to the nerd_fonts directory.
 
 ---
 
