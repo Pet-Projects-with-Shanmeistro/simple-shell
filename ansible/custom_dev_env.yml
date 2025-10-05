@@ -33,14 +33,20 @@
       tags:
         - shell
 
+    - name: Include fonts role (nerd fonts installation)
+      ansible.builtin.include_role:
+        name: fonts
+      tags:
+        - fonts
+
     - name: Include sysadmin-tools role
       ansible.builtin.include_role:
         name: sysadmin-tools
       tags:
         - sysadmin-tools
 
-    - name: Include dev-tools role
+    - name: Include devtools role (development tools)
       ansible.builtin.include_role:
-        name: dev-tools
+        name: devtools
       tags:
-        - dev-tools
+        - devtools

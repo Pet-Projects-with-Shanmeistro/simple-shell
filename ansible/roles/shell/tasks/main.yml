@@ -1,14 +1,91 @@
 ---
+# ============================================================================
+# Backup existing configurations before making changes
+# ============================================================================
+- name: Check if existing .zshrc exists
+  ansible.builtin.stat:
+    path: "{{ user_home }}/.zshrc"
+  register: shell_existing_zshrc
+  become: false
+
+- name: Check if existing .bashrc exists
+  ansible.builtin.stat:
+    path: "{{ user_home }}/.bashrc"
+  register: shell_existing_bashrc
+  become: false
+
+- name: Check if existing Oh My Zsh installation exists
+  ansible.builtin.stat:
+    path: "{{ omz_path }}"
+  register: shell_omz_path_stat
+  become: false
+
+- name: Check if existing Powerlevel10k installation exists
+  ansible.builtin.stat:
+    path: "{{ p10k_theme_path_omz }}"
+  register: shell_p10k_path_stat
+  become: false
+
+- name: Check if existing Starship binary exists
+  ansible.builtin.stat:
+    path: "{{ local_bin_dir }}/starship"
+  register: shell_starship_binary_stat
+  become: false
+
+- name: Create backup directory
+  ansible.builtin.file:
+    path: "{{ backup_dir }}"
+    state: directory
+    mode: '0755'
+  become: false
+  when: backup_existing_configs and (shell_existing_zshrc.stat.exists or shell_existing_bashrc.stat.exists)
+
+- name: Backup existing .zshrc
+  ansible.builtin.copy:
+    src: "{{ user_home }}/.zshrc"
+    dest: "{{ backup_dir }}/.zshrc.backup"
+    remote_src: true
+    mode: '0644'
+  become: false
+  when: backup_existing_configs and shell_existing_zshrc.stat.exists
+
+- name: Backup existing .bashrc
+  ansible.builtin.copy:
+    src: "{{ user_home }}/.bashrc"
+    dest: "{{ backup_dir }}/.bashrc.backup"
+    remote_src: true
+    mode: '0644'
+  become: false
+  when: backup_existing_configs and shell_existing_bashrc.stat.exists
+
+- name: Backup existing .p10k.zsh
+  ansible.builtin.copy:
+    src: "{{ user_home }}/.p10k.zsh"
+    dest: "{{ backup_dir }}/.p10k.zsh.backup"
+    remote_src: true
+    mode: '0644'
+  become: false
+  when: backup_existing_configs and prompt_framework == "p10k"
+  ignore_errors: true
+
+- name: Display backup location
+  ansible.builtin.debug:
+    msg: "Existing configurations backed up to: {{ backup_dir }}"
+  when: backup_existing_configs and (shell_existing_zshrc.stat.exists or shell_existing_bashrc.stat.exists)
+
+# ============================================================================
+# Install Zsh if preferred
+# ============================================================================
 - name: Install Zsh if preferred and not already installed
   become: true
   ansible.builtin.package:
     name: zsh
     state: present
-  register: shell_zsh_install_result
-  when: preferred_shell == "/usr/bin/zsh" and not ansible_check_mode
-  failed_when: shell_zsh_install_result is defined and shell_zsh_install_result.failed
-  notify: Restart Shell Service # If such a service exists - might not be relevant
+  when: preferred_shell == "/usr/bin/zsh"
 
+# ============================================================================
+# Starship Installation
+# ============================================================================
 - name: Download Starship install script
   become: true
   ansible.builtin.get_url:
@@ -21,10 +98,9 @@
   become: true
   ansible.builtin.command: sh /tmp/install_starship.sh -y
   args:
-    creates: "{{ user_home }}/.local/bin/starship"
-  register: shell_starship_install_result
-  when: prompt_framework == "starship"
-  failed_when: shell_starship_install_result is defined and shell_starship_install_result.rc != 0
+    creates: "{{ local_bin_dir }}/starship"
+  when: prompt_framework == "starship" and not shell_starship_binary_stat.stat.exists
+
 - name: Ensure Starship configuration directory exists
   ansible.builtin.file:
     path: "{{ config_dir }}"
@@ -32,6 +108,7 @@
     owner: "{{ ansible_user_id }}"
     group: "{{ ansible_user_gid }}"
     mode: '0755'
+  become: false
   when: prompt_framework == "starship"
 
 - name: Check if Starship configuration file exists
@@ -40,110 +117,130 @@
   register: shell_starship_config_stat
   when: prompt_framework == "starship"
 
-- name: Create Starship configuration file (if not exists)
-  ansible.builtin.file:
-    path: "{{ starship_config_path }}"
-    state: file
-    owner: "{{ ansible_user_id }}"
-    group: "{{ ansible_user_gid }}"
-    mode: '0644'
-  when: prompt_framework == "starship" and not (shell_starship_config_stat is defined and shell_starship_config_stat.stat.exists)
-
-- name: Install Oh My Zsh (for Powerlevel10k)
-  become: true
-  ansible.builtin.git:
-    repo: https://github.com/ohmyzsh/ohmyzsh.git
-    dest: "{{ omz_path }}"
-    depth: 1
-    update: no
-  register: shell_omz_install_result
-  when: prompt_framework == "p10k" and (shell_omz_path_stat is not defined or not shell_omz_path_stat.stat.exists)
-  failed_when: shell_omz_install_result is defined and shell_omz_install_result.failed
-    dest: "{{ omz_path }}"
-    depth: 1
-    update: no
-  register: shell_omz_install_result
-  when: prompt_framework == "p10k" and not shell_omz_path_stat.stat.exists
-  failed_when: shell_omz_install_result is defined and shell_omz_install_result.failed
-
-- name: Install Powerlevel10k theme (via Oh My Zsh custom themes)
-  become: true
-  ansible.builtin.git:
-    repo: https://github.com/romkatv/powerlevel10k.git
-    dest: "{{ p10k_theme_path_omz }}"
-    depth: 1
-    update: no
-  register: shell_p10k_install_result
-  when: prompt_framework == "p10k" and (shell_p10k_path_stat is not defined or not shell_p10k_path_stat.stat.exists) and (shell_omz_path_stat is defined and shell_omz_path_stat.stat.exists)
-  failed_when: shell_p10k_install_result is defined and shell_p10k_install_result.failed
-    dest: "{{ p10k_theme_path_omz }}"
-    depth: 1
-    update: no
-  register: shell_p10k_install_result
-  when: prompt_framework == "p10k" and not shell_p10k_path_stat.stat.exists and shell_omz_path_stat.stat.exists
-  failed_when: shell_p10k_install_result is defined and shell_p10k_install_result.failed
-
-- name: Set Zsh theme to Powerlevel10k in .zshrc
-  ansible.builtin.lineinfile:
-    path: "{{ user_home }}/.zshrc"
-    regexp: '^ZSH_THEME=".*"'
-    line: 'ZSH_THEME="powerlevel10k/powerlevel10k"'
-    create: true
-  register: shell_zsh_theme_set_result
-  # This task is idempotent but may show 'changed' on first run
-  when: preferred_shell == "/usr/bin/zsh" and prompt_framework == "p10k"
-
-- name: Ensure .zshrc ownership and permissions
-  ansible.builtin.file:
-- name: Check if Powerlevel10k config exists
-  ansible.builtin.stat:
-    path: "{{ user_home }}/.p10k.zsh"
-  register: shell_p10k_config_stat
-  when: preferred_shell == "/usr/bin/zsh" and prompt_framework == "p10k"
-
-- name: Configure Powerlevel10k zshrc (basic - user will likely customize)
+- name: Copy Starship configuration template
   ansible.builtin.copy:
-    content: |
-      # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-      [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-    dest: "{{ user_home }}/.p10k.zsh"
+    src: "{{ playbook_dir }}/../starship_templates/{{ starship_template }}.toml"
+    dest: "{{ starship_config_path }}"
     owner: "{{ ansible_user_id }}"
     group: "{{ ansible_user_gid }}"
     mode: '0644'
-  register: shell_p10k_config_result
-  when: preferred_shell == "/usr/bin/zsh" and prompt_framework == "p10k" and not (shell_p10k_config_stat is defined and shell_p10k_config_stat.stat.exists)
-  failed_when: shell_p10k_config_result is defined and shell_p10k_config_result.failed
+  become: false
+  when: prompt_framework == "starship" and not shell_starship_config_stat.stat.exists
+
+# ============================================================================
+# Zsh Plugins Installation (for Starship - standalone)
+# ============================================================================
+- name: Create Zsh plugins directory (for Starship setup)
+  ansible.builtin.file:
+    path: "{{ zsh_plugins_dir }}"
+    state: directory
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_gid }}"
+    mode: '0755'
+  become: false
+  when: prompt_framework == "starship" and preferred_shell == "/usr/bin/zsh"
+
+- name: Clone zsh-autosuggestions (standalone)
+  ansible.builtin.git:
+    repo: "{{ zsh_autosuggestions_repo }}"
+    dest: "{{ zsh_plugins_dir }}/zsh-autosuggestions"
+    version: master
+    update: no
+  become: false
+  when: prompt_framework == "starship" and preferred_shell == "/usr/bin/zsh"
+
+- name: Clone zsh-syntax-highlighting (standalone)
+  ansible.builtin.git:
+    repo: "{{ zsh_syntax_highlighting_repo }}"
+    dest: "{{ zsh_plugins_dir }}/zsh-syntax-highlighting"
+    version: master
+    update: no
+  become: false
+  when: prompt_framework == "starship" and preferred_shell == "/usr/bin/zsh"
+
+# ============================================================================
+# Oh My Zsh Installation (for Powerlevel10k)
+# ============================================================================
+- name: Install Oh My Zsh (for Powerlevel10k)
+  ansible.builtin.git:
+    repo: 'https://github.com/ohmyzsh/ohmyzsh.git'
+    dest: "{{ omz_path }}"
+    version: master
+    update: no
+  become: false
+  when: prompt_framework == "p10k" and not shell_omz_path_stat.stat.exists
+
+- name: Install zsh-autosuggestions plugin (Oh My Zsh)
+  ansible.builtin.git:
+    repo: 'https://github.com/zsh-users/zsh-autosuggestions'
+    dest: "{{ omz_plugins_path }}/zsh-autosuggestions"
+    version: master
+    update: no
+  become: false
+  when: prompt_framework == "p10k" and shell_omz_path_stat.stat.exists
+
+- name: Install zsh-syntax-highlighting plugin (Oh My Zsh)
+  ansible.builtin.git:
+    repo: 'https://github.com/zsh-users/zsh-syntax-highlighting.git'
+    dest: "{{ omz_plugins_path }}/zsh-syntax-highlighting"
+    version: master
+    update: no
+  become: false
+  when: prompt_framework == "p10k" and shell_omz_path_stat.stat.exists
+
+# ============================================================================
+# Powerlevel10k Installation
+# ============================================================================
+- name: Install Powerlevel10k theme (via Oh My Zsh)
+  ansible.builtin.git:
+    repo: 'https://github.com/romkatv/powerlevel10k.git'
+    dest: "{{ p10k_theme_path_omz }}"
+    version: master
+    update: no
+  become: false
+  when: prompt_framework == "p10k" and not shell_p10k_path_stat.stat.exists and shell_omz_path_stat.stat.exists
+
+- name: Copy Powerlevel10k configuration template
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../p10k_templates/{{ p10k_template }}.zsh"
+    dest: "{{ p10k_config_path }}"
     owner: "{{ ansible_user_id }}"
     group: "{{ ansible_user_gid }}"
     mode: '0644'
-  register: shell_p10k_config_result
-  when: preferred_shell == "/usr/bin/zsh" and prompt_framework == "p10k" and not (lookup('file', user_home ~ '/.p10k.zsh') | length > 0)
-  failed_when: shell_p10k_config_result is defined and shell_p10k_config_result.failed
-- name: Ensure Starship initialization is in shell configuration
-  when: prompt_framework == "starship"
-  block:
-    - name: Ensure Starship initialization in .bashrc
-      ansible.builtin.lineinfile:
-        path: "{{ user_home }}/.bashrc"
-        line: 'eval "$(starship init bash)"'
-        create: true
-      register: shell_bash_starship_init_result
-      failed_when: shell_bash_starship_init_result is defined and shell_bash_starship_init_result.failed
+  become: false
+  when: prompt_framework == "p10k" and not shell_p10k_path_stat.stat.exists
 
-    - name: Ensure Starship initialization in .zshrc
-      ansible.builtin.lineinfile:
-        path: "{{ user_home }}/.zshrc"
-        line: 'eval "$(starship init zsh)"'
-        create: true
-      register: shell_zsh_starship_init_result
-      failed_when: shell_zsh_starship_init_result is defined and shell_zsh_starship_init_result.failed
-      when: preferred_shell == "/usr/bin/zsh"
+# ============================================================================
+# Deploy .zshrc based on prompt framework
+# ============================================================================
+- name: Deploy .zshrc for Powerlevel10k
+  ansible.builtin.template:
+    src: zshrc-p10k.j2
+    dest: "{{ user_home }}/.zshrc"
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_gid }}"
+    mode: '0644'
+    backup: yes
+  become: false
+  when: preferred_shell == "/usr/bin/zsh" and prompt_framework == "p10k"
 
+- name: Deploy .zshrc for Starship
+  ansible.builtin.template:
+    src: zshrc-starship.j2
+    dest: "{{ user_home }}/.zshrc"
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_gid }}"
+    mode: '0644'
+    backup: yes
+  become: false
+  when: preferred_shell == "/usr/bin/zsh" and prompt_framework == "starship"
+
+# ============================================================================
+# Set preferred shell
+# ============================================================================
 - name: Set preferred shell for user
   become: true
   ansible.builtin.user:
-    name: "{{ ansible_user }}"
+    name: "{{ ansible_user_id }}"
     shell: "{{ preferred_shell }}"
-  register: shell_set_shell_result
-  when: preferred_shell != ansible_user_shell and not ansible_check_mode
-  failed_when: shell_set_shell_result is defined and shell_set_shell_result.failed
+  when: preferred_shell is defined
