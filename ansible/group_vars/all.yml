@@ -44,16 +44,24 @@ install_zsh: true  # Install Zsh if not present and preferred_shell is zsh
 
 # --- DevOps Essentials ---
 # Containerization
-install_docker: true
-install_kubectl: true
-install_helm: false
-install_docker_compose: true
+install_docker: true # Install Docker Engine
+install_kubectl: false # Install kubectl for Kubernetes
+install_helm: false # Install Helm for Kubernetes
+install_docker_compose: true # Install Docker Compose v2 (plugin)
 
-# Infrastructure as Code
-install_terraform: true
+# Infrastructure as Code (IaC) and Cloud CLIs
+install_terraform: true # Install Terraform by HashiCorp
+install_packer: false # Install Packer by HashiCorp
+install_ansible: true # Install Ansible for automation
+install_pulumi: false # Install Pulumi for IaC
 install_awscli: false
 install_gcloud: false
 install_azurecli: false
+
+# Networking & Security
+install_nettools: true # Install networking tools (net-tools package)
+install_nmap: true     # Install nmap for network scanning
+install_iperf3: true   # Install iperf3 for network performance testing
 
 # --- Full Stack & AI/ML Essentials ---
 # Python
@@ -63,35 +71,24 @@ python_versions:
   - "3.11"
 
 # Python linters and formatters
-install_flake8: true
-install_black: true
-install_isort: true
+install_flake8: true # Linter
+install_black: true # Formatter
+install_isort: true # Import sorter
 
 # Node.js
-install_nvm: true
+install_nvm: true # Install NVM (Node Version Manager)
 
 # Package Managers
-install_pip: true
-install_npm: true
-install_uv: true
-install_poetry: true
+install_pip: true # Install pip for Python
+install_uv: true # Universal Version Manager for Python tools
 
 # --- Common Utilities ---
-install_git: true
-install_curl: true
-install_wget: true
-install_jq: true
-install_tmux: true
+install_git: true # Version control
+install_curl: true # Download utility
+install_wget: true # Download utility
+install_jq: true # JSON processor
 install_ripgrep: true # Faster grep
-
-# --- Nerd Fonts Configuration ---
-nerd_fonts_to_install:
-  - CascadiaCode
-  - FiraCode
-  - JetBrainsMono
-  # - Hack
-  # - SourceCodePro
-  # - UbuntuMono
+install_fd: true      # Faster find
 
 # Set to true to install all available fonts
 install_all_fonts: false
@@ -102,7 +99,7 @@ font_cache_refresh: true
 
 # --- Configuration Paths ---
 # Assumes user running ansible is the target user
-user_home: "{{ ansible_user_dir }}"
+user_home: "{{ ansible_env.HOME }}"
 config_dir: "{{ user_home }}/.config"
 local_bin_dir: "{{ user_home }}/.local/bin"
 

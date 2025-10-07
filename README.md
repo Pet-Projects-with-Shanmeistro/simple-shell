@@ -6,16 +6,32 @@ Welcome to **My Awesome Dev Environment Setup!** This repository provides a full
 
 ## 📖 Table of Contents
 
+- [🚀 Key Features](#-key-features)
 - [🚀 Benefits of Using This Setup](#-benefits-of-using-this-setup)
+- [🐚 Supported Shells & Frameworks](#-supported-shells--frameworks)
 - [🛠️ Prerequisites](#️-prerequisites)
-- [⚙️ Installation](#️-installation)
-- [🎨 Nerd Fonts Management](#-nerd-fonts-management)
-- [💻 Usage](#-usage)
-- [🛠️ Managing Optional Tools](#️-managing-optional-tools)
-- [⚙️ Running the Playbook Directly (Advanced)](#️-running-the-playbook-directly-advanced)
-- [📂 Roles Overview](#-roles-overview)
+- [⚙️ Quick Start](#️-quick-start)
+- [🎨 Font Management](#-font-management)
+- [💻 Advanced Usage](#-advanced-usage)
+- [🔧 Optional Tools](#-optional-tools)
+- [📂 Project Structure](#-project-structure)
 - [⚙️ Customization](#️-customization)
+- [🔍 Troubleshooting](#-troubleshooting)
 - [🤝 Contributing](#-contributing)
+- [📜 Changelog](#-changelog)
+
+---
+
+## 🚀 Key Features
+
+- **🌍 Cross-Platform Support:** Ubuntu 20.04+, macOS, and WSL2
+- **🐚 Multi-Shell Support:** Bash, Zsh, Fish, and Nushell
+- **🎨 Six Prompt Frameworks:** Oh My Zsh (P10k), Oh My Posh, Starship, Spaceship, Zim, and Prezto
+- **🔤 Smart Font Management:** Framework-aware Nerd Font recommendations and installation
+- **🛡️ Safe Updates:** Backup existing configurations before making changes
+- **⚡ Intelligent Installation:** Detects existing setups and offers update or clean install options
+- **🛠️ Modular Design:** Organized roles for easy customization and maintenance
+- **📦 Optional Tools:** Separate script for managing additional development tools
 
 ---
 
@@ -31,215 +47,397 @@ Welcome to **My Awesome Dev Environment Setup!** This repository provides a full
 
 ---
 
-## 🛠️ Prerequisites
+## 🐚 Supported Shells & Frameworks
 
-Before you begin, ensure you have the following installed on your system:
+### Shells
+- **Bash** - Reliable and well-documented (Starship only)
+- **Zsh** - Feature-rich with excellent tab completion (All frameworks)
+- **Fish** - User-friendly with smart autosuggestions (Starship, Oh My Posh)
+- **Nushell** - Modern shell with structured data support (Starship, Oh My Posh)
 
-- **Ansible:** Version 2.9 or higher (used for the automation).
-- **Git:** For cloning this repository.
-- **Curl:** For downloading necessary scripts and files.
-- **sudo Privileges:** Administrative rights are required for installing packages.
+### Prompt Frameworks
+- **Oh My Zsh + Powerlevel10k** - Feature-rich Zsh framework with beautiful prompts
+- **Oh My Posh** - Cross-shell prompt engine with modern themes
+- **Starship** - Fast, cross-shell prompt (minimal setup, blazing fast)
+- **Spaceship** - Minimalistic Zsh prompt with clean design
+- **Zim** - Modular Zsh framework with fast startup
+- **Prezto** - Zsh configuration framework with sane defaults
 
 ---
 
-## ⚙️ Installation
+## 🛠️ Prerequisites
+
+**Supported Operating Systems:**
+- Ubuntu 20.04 or higher
+- macOS (with Homebrew recommended)
+- WSL2 with Ubuntu
+
+**System Requirements:**
+- Git (for cloning repository)
+- Sudo privileges (for package installation)
+- Internet connection (for downloads)
+
+**Note:** The installer will automatically check for and install Ansible if not present.
+
+---
+
+## ⚙️ Quick Start
 
 Follow these simple steps to set up your awesome development environment:
 
-### 1. Clone the Repository
+### 1. Clone and Enter Repository
 
 ```bash
-git clone <repository_url>
+git clone https://github.com/Pet-Projects-with-Shanmeistro/simple-shell.git or git@github.com:Pet-Projects-with-Shanmeistro/simple-shell.git
 cd simple-shell
 ```
 
-(Replace <repository_url> with the actual URL of your repository.)
-
-### 2. Make the Installation Script Executable
+### 2. Run the Installer after making the script executable
 
 ```bash
 chmod +x install_custom_shell.sh
-```
 
-### 3. Run the Installation Script
-
-```bash
 ./install_custom_shell.sh
 ```
 
-This script will:
+### 3. Follow Interactive Setup
 
-- Check for the necessary prerequisites.
-- Prompt you to choose your preferred shell (Bash or Zsh).
-- If you choose Zsh, it will ask for your preferred prompt framework (Starship or Powerlevel10k).
-- Ask if you want to set Zsh as your default shell (if chosen).
-- Run the Ansible playbook to configure your environment with essential tools.
+The installer will:
+
+✅ Check and install Ansible if needed
+🔍 Detect existing shell configurations
+🐚 Help you choose your preferred shell
+🎨 Guide you through framework selection
+🔤 Recommend and install appropriate Nerd Fonts
+🛠️ Optionally configure development tools
+⚡ Deploy your custom environment
 
 ### 4. Apply Changes
 
-After the script completes, restart your terminal or run:
+After installation:
 
-- `source ~/.bashrc` (for Bash)
-- `exec zsh` (for Zsh)
+```bash
+# For Bash
+source ~/.bashrc
 
----
+# For Zsh
+exec zsh
 
-## 🎨 Nerd Fonts Management
+# For Fish
+exec fish
 
-This setup includes a comprehensive collection of Nerd Fonts, which are patched fonts that include additional glyphs and symbols for better coding and terminal use. The fonts are installed and managed automatically as part of the setup.
-
-To change your terminal font to a Nerd Font:
-
-1. Open your terminal preferences.
-2. Look for the font or appearance settings.
-3. Select a Nerd Font from the list of installed fonts (e.g., "Fira Code Nerd Font", "Hack Nerd Font", etc.).
-4. Adjust the font size and other settings as desired.
-
-For a complete list of available Nerd Fonts, check the `nerd-fonts` role in the Ansible configuration.
+# For Nushell
+nu
+```
 
 ---
 
-## 💻 Usage
+## 🎨 Font Management
 
-Once the installation is complete, you'll have a personalized development environment ready to go! Here are some tips:
+**Automatic Font Recommendations**
 
-- **Explore Your New Shell:** Enjoy the enhanced features and prompt of your chosen shell (Bash with Starship or Zsh with Starship/Powerlevel10k).
+The installer automatically recommends fonts based on your chosen framework:
 
-- **Set Your Terminal Font:** Configure your terminal to use one of the installed Nerd Fonts:
+- **Powerlevel10k:** MesloLGS, Hack, FiraCode, CascadiaCode
+- **Starship:** JetBrainsMono, FiraCode, CascadiaCode, Hack
+- **Oh My Posh:** CascadiaCode, JetBrainsMono, FiraCode, Hack
+- **Others:** JetBrainsMono, FiraCode, CascadiaCode
 
-  - VS Code: File → Preferences → Settings → Terminal Font Family
-  - Terminal.app: Preferences → Profiles → Font
-  - iTerm2: Preferences → Profiles → Text → Font
-  - Windows Terminal: Settings → Profiles → Appearance → Font Face
-  - GNOME Terminal: Preferences → Profiles → Text → Custom Font
+**Managing Font Management**
 
-**Customize Further:**
+```bash
+# Interactive font management
+./manage_fonts.sh
 
-- **Starship:** Configure your Starship prompt by editing the `~/.config/starship.toml` file. Check the starship directory for preset configurations.
-- **Powerlevel10k:** If you chose Zsh with Powerlevel10k, you can further customize it by running `p10k configure` in your terminal or use one of the presets in the p10k directory.
-- **Utilize Installed Tools:** The sysadmin-tools and dev-tools roles install a variety of useful utilities that are now at your fingertips.
+# Install specific fonts
+./manage_fonts.sh install CascadiaCode FiraCode
+
+# List available fonts
+./manage_fonts.sh list
+
+# Check installation status
+./manage_fonts.sh status
+```
+
+**Terminal Configuration**
+
+After font installation, configure your terminal:
+
+**Linux (GNOME Terminal):**
+Preferences → Profiles → Text
+Enable "Custom font"
+Select a Nerd Font
+
+**macOS (Terminal/iTerm2):**
+Preferences → Profiles → Text/Font
+Choose a Nerd Font
+
+**Windows/WSL:**
+Windows Terminal Settings
+Profiles → Appearance → Font face
+Select a Nerd Font
 
 ---
 
-## 🛠️ Managing Optional Tools
+## 💻 Advanced Usage
 
-A separate script, `manage_optional_tools.sh`, is provided to install, remove, and even purge (where supported) additional tools that are not part of the default setup. Run the script and follow the interactive menu.
+**Dry Run (Test Mode)**
+
+See what changes would be made without applying them:
+
+```bash
+./install_custom_shell.sh --check
+```
+
+**Direct Ansible Execution**
+
+For advanced users who want more control:
+
+```bash
+# Run specific roles
+ansible-playbook ansible/custom_dev_env.yml \
+  --ask-become-pass \
+  --tags "shell,fonts" \
+  --extra-vars "preferred_shell=/usr/bin/zsh prompt_framework=starship"
+
+# Available tags: common, shell, fonts, sysadmin-tools, devtools
+```
+
+**Setup Modes**
+
+The installer detects existing configurations and offers:
+
+- **New Install** - Fresh installation on clean system
+- **Update Mode** - Modify existing setup (with backup)
+- **Clean Install** - Replace existing setup (with backup)
+
+---
+
+## 🔧 Optional Tools
+
+Manage additional development tools separately:
 
 ```bash
 ./manage_optional_tools.sh
 ```
 
-This script offers granular control over tools like debugging utilities, monitoring tools, network tools, and more, without needing to directly edit Ansible configuration files for these optional packages.
+**Available Tools:**
+
+- **DevOps:** Docker, Kubernetes, Terraform, AWS CLI
+- **Languages:** Python tools, Node.js, package managers
+- **Utilities:** tmux, ripgrep, jq, and more
 
 ---
 
-## ⚙️ Running the Playbook Directly (Advanced)
+## 📂 Project Structure
 
-For more fine-grained control, you can run the Ansible playbook directly:
-
-```bash
-ansible-playbook -i ansible/inventory/localhost ansible/custom_dev_env.yml -K --tags <role_tag>
-```
-
-- -K: Prompts for the sudo password.
-- --tags <role_tag>: Allows you to run specific roles (e.g., common, shell, sysadmin-tools, dev-tools).
-
-Available Tags
-- common: Basic system configurations
-- shell: Shell and prompt setup
-- sysadmin-tools: System administration utilities
-- dev-tools: Development tools and environments
-- fonts: Nerd Fonts installation and management
-
----
-
-## 📂 Roles Overview
-
-This setup is organized into the following Ansible roles:
-
-- `common`: Contains tasks that are common to all environments, such as basic system configurations.
-- `shell`: Configures your chosen shell (Bash or Zsh) and sets up the prompt.
-- `sysadmin-tools`: Installs essential system administration and networking utilities (e.g., htop, tmux, nmap, iproute2).
-- `dev-tools`: Installs development-related tools, including Python, uv, ruff, taplo, Node.js (nvm), and more.
-- `fonts`: Manages Nerd Fonts installation with configurable font lists and cross-platform support.
-
-Font Configuration
-
-You can customize which fonts to install by editing `all.yml`:
-
-```bash
-# Nerd Fonts Configuration
-nerd_fonts_to_install:
-  - CascadiaCode
-  - FiraCode
-  - JetBrainsMono
-  # Add or remove fonts as needed
-
-# Set to true to install all available fonts
-install_all_fonts: false
-```
-
----
-
-## ⚠️ Removing Packages and Libraries
-
-This script primarily installs tools using your system's package manager or via tools like pip. To completely remove a tool and its dependencies, you should use the appropriate uninstallation command for the package manager that installed it (e.g., `sudo apt remove <package>`, `brew uninstall <package>`, `pip uninstall <package>)`. The `manage_optional_tools.sh` script provides an interface for removing some of these tools. Manual removal is recommended to avoid unintended consequences.
-
-For fonts, use the dedicated font manager:
-
-```bash
-./manage_fonts.sh
-```
-This script allows you to add or remove font families as needed. Manual removal is recommended to avoid unintended consequences.
-
-The `manage_optional_tools.sh` script provides an interface for removing some of these tools. Manual removal is recommended to avoid unintended consequences.
+simple-shell/
+├── install_custom_shell.sh     # Main installer script
+├── test_playbook.sh            # Development testing
+├── manage_fonts.sh             # Font management
+├── manage_optional_tools.sh    # Optional tools
+├── ansible/
+│   ├── custom_dev_env.yml      # Main playbook
+│   ├── group_vars/
+│   │   └── all.yml             # Configuration variables
+│   └── roles/
+│       ├── common/             # Basic system setup
+│       ├── shell/              # Shell and prompt configuration
+│       ├── fonts/              # Font management
+│       ├── devtools/           # Development tools
+│       └── sysadmin-tools/     # System utilities
+├── starship_templates/         # Starship configurations
+├── p10k_templates/            # Powerlevel10k configurations
+└── nerd_fonts/                # Font collection
 
 ---
 
 ## ⚙️ Customization
 
-Beyond the initial setup and optional tools management, you can further customize your environment by:
+**Configuration Variables**
 
-- **Font Management:** Use the `manage_fonts.sh` script to add or remove font families as needed.
-- **Prompt Presets:** Explore the starship and p10k directories for ready-to-use prompt configurations.
-- **Modifying Role Tasks:** Edit the task files within the roles directories to change installation procedures or add new tools.
-- **Creating New Roles:** Organize more complex customizations into new roles and include them in the `custom_dev_env.yml` playbook.
-- **Adding Fonts:** Download additional Nerd Fonts from the official repository and add them to the nerd_fonts directory.
+Edit `all.yml` to customize:
+
+```yaml
+# Shell preferences
+preferred_shell: "/usr/bin/zsh"
+prompt_framework: "starship"
+
+# Font configuration
+nerd_fonts_to_install:
+  - CascadiaCode
+  - FiraCode
+  - JetBrainsMono
+
+# Template selection
+starship_template: "tokyo-night"
+p10k_template: "p10k-rainbow"
+
+# Tool installation flags
+install_docker: true
+install_terraform: true
+python_versions: ["3.8", "3.11"]
+```
+
+Adding New Templates
+
+**Starship Templates:**
+1. Add `.toml` files to starship_templates
+2. Reference in `all.yml` as starship_template
+
+**Powerlevel10k Templates:**
+1. Add .zsh files to p10k_templates
+2. Reference in all.yml as p10k_template
+
+**Framework-Specific Configuration**
+
+Each shell/framework combination uses dedicated templates:
+
+- `zshrc-p10k.j2` - Zsh + Powerlevel10k
+- `zshrc-starship.j2` - Zsh + Starship
+- `fish-starship.fish.j2` - Fish + Starship
+- `nushell-starship.nu.j2` - Nushell + Starship
 
 ---
 
-## 🔧 Troubleshooting
+## 🔍 Troubleshooting
 
-### Font Issues
-- Fonts not appearing: Restart your terminal application and refresh the font list
-- Symbols not displaying: Ensure you're using a "Nerd Font" variant (not the original font)
-- WSL font problems: Run the font manager as administrator for system-wide Windows installation
+Common Issues
 
-### General Issues
-- Permission errors: Ensure you have sudo privileges and run scripts with appropriate permissions
-- Missing dependencies: Check that all prerequisites are installed before running the setup
-- Path issues: Make sure scripts are executable (chmod +x script_name.sh)
+**Ansible Not Found:**
 
-### Getting Help
-- Check the log file at /tmp/nerd-fonts-manager.log for font installation issues
-- Use `./manage_fonts.sh status` to check system information
-- Run `fc-list | grep -i nerd` to verify font installation on Linux
+```bash
+# The installer will offer to install Ansible automatically
+# Or install manually:
+sudo apt update && sudo apt install ansible  # Ubuntu
+brew install ansible                         # macOS
+```
+
+**Permission Errors:**
+
+```bash
+# Ensure scripts are executable
+chmod +x install_custom_shell.sh
+chmod +x manage_fonts.sh
+chmod +x manage_optional_tools.sh
+```
+
+**Font Issues:**
+
+```bash
+# Check font installation
+fc-list | grep -i nerd  # Linux
+# Font Book app          # macOS
+
+# Refresh font cache
+fc-cache -f -v          # Linux
+# Restart terminal       # macOS
+```
+
+**Shell Not Switching:**
+
+```bash
+# Set default shell manually
+chsh -s /usr/bin/zsh    # For Zsh
+chsh -s /usr/bin/fish   # For Fish
+
+# Or restart terminal and run
+exec zsh                # Start Zsh
+exec fish               # Start Fish
+```
+
+**Debug Mode**
+
+For development and troubleshooting:
+
+```bash
+# Test ansible syntax
+ansible-playbook ansible/custom_dev_env.yml --syntax-check
+
+# Run in check mode with verbosity
+ansible-playbook ansible/custom_dev_env.yml --check -vv
+
+# Test specific roles
+./test_playbook.sh
+```
+
+**Log Files**
+
+Check these locations for detailed logs:
+
+- nerd-fonts-manager.log - Font installation logs
+- `~/.config_backups/` - Configuration backups
+- Ansible output during installation
+
+**🛡️ Safety Features**
+
+- **Automatic Backups:** All existing configurations are backed up before changes
+- **Dry Run Mode:** Test installations without making changes
+- **Idempotent Operations:** Safe to run multiple times
+- **Rollback Support:** Backup configurations can be easily restored
+- **Smart Detection:** Avoids overwriting existing setups without permission
+
+**🧪 Testing**
+
+For developers and contributors:
+
+```bash
+# Quick syntax and dry-run test
+./test_playbook.sh
+
+# Test specific configurations
+ansible-playbook ansible/custom_dev_env.yml \
+  --check \
+  --extra-vars "preferred_shell=/usr/bin/zsh prompt_framework=starship"
+```
 
 ---
 
 ## 🤝 Contributing
-Contributions to this project are welcome! Feel free to submit pull requests with improvements, bug fixes, or new features. Please follow standard Git contribution guidelines.
 
-Areas for Contribution
-- Additional font families
-- New prompt presets for Starship/Powerlevel10k
-- Platform-specific optimizations
-- Additional development tools
-- Documentation improvements
+Contributions are welcome! Areas for improvement:
+
+- **New Shell Support:** Add support for additional shells
+- **Framework Integration:** New prompt frameworks or themes
+- **Platform Support:** Additional operating systems
+- **Template Improvements:** Better default configurations
+- **Documentation:** Usage examples and guides
+
+Development Setup
+
+```bash
+# Clone and create development environment
+git clone <your-fork>
+cd simple-shell
+
+# Create Python virtual environment for testing
+python3 -m venv .venv
+source .venv/bin/activate
+pip install ansible
+
+# Run tests
+./test_playbook.sh
+```
+
+---
+
+## 📄 License
+
+This project is open source. Feel free to use, modify, and distribute according to your needs.
+
+---
+
+## 🙏 Acknowledgments
+
+- **Starship:** - The minimal, blazing-fast prompt
+- **Powerlevel10k** - A fast reimplementation of Powerlevel9k
+- **Oh My Posh** - A prompt theme engine for any shell
+- **Nerd Fonts** - Iconic font aggregator and patcher
+- **Fish Shell** - A smart and user-friendly command line shell
+- **Nushell** - A new type of shell
 
 ---
 
 Created with ❤️ by Shanmeistro - 2025
 
-Making beautiful, functional development environments accessible to everyone!
-
+*Making beautiful, functional development environments accessible to everyone!*

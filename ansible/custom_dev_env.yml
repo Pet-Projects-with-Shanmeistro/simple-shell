@@ -2,9 +2,9 @@
 - name: Setup local dev environment
   hosts: localhost
   connection: local
-  become: true # Generally needed for most tasks
+  become: false  # Changed from true - critical fix!
   vars:
-    user_home: "{{ ansible_user_dir }}"
+    user_home: "{{ ansible_env.HOME }}"  # Use ansible_env.HOME instead of ansible_user_dir
     config_dir: "{{ user_home }}/.config"
     local_bin_dir: "{{ user_home }}/.local/bin"
 
