@@ -104,13 +104,13 @@ chmod +x install_custom_shell.sh
 
 The installer will:
 
-✅ Check and install Ansible if needed
-🔍 Detect existing shell configurations
-🐚 Help you choose your preferred shell
-🎨 Guide you through framework selection
-🔤 Recommend and install appropriate Nerd Fonts
-🛠️ Optionally configure development tools
-⚡ Deploy your custom environment
+- ✅ Check and install Ansible if needed
+- 🔍 Detect existing shell configurations
+- 🐚 Help you choose your preferred shell
+- 🎨 Guide you through framework selection
+- 🔤 Recommend and install appropriate Nerd Fonts
+- 🛠️ Optionally configure development tools
+- ⚡ Deploy your custom environment
 
 ### 4. Apply Changes
 
@@ -231,6 +231,7 @@ Manage additional development tools separately:
 
 ## 📂 Project Structure
 
+```tree
 simple-shell/
 ├── install_custom_shell.sh     # Main installer script
 ├── test_playbook.sh            # Development testing
@@ -249,6 +250,7 @@ simple-shell/
 ├── starship_templates/         # Starship configurations
 ├── p10k_templates/            # Powerlevel10k configurations
 └── nerd_fonts/                # Font collection
+```
 
 ---
 
@@ -286,8 +288,8 @@ Adding New Templates
 2. Reference in `all.yml` as starship_template
 
 **Powerlevel10k Templates:**
-1. Add .zsh files to p10k_templates
-2. Reference in all.yml as p10k_template
+1. Add `.zsh` files to p10k_templates
+2. Reference in `all.yml` as p10k_template
 
 **Framework-Specific Configuration**
 
